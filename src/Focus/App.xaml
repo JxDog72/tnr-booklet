@@ -1,9 +1,17 @@
-﻿<Application x:Class="Focus.App"
+<Application x:Class="Focus.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Focus"
-             StartupUri="MainWindow.xaml">
+             xmlns:conv="clr-namespace:Focus.Converters"
+             ShutdownMode="OnMainWindowClose">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/FocusDark.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+            <conv:BoolToVisibilityConverter x:Key="InvertBoolToVis" Invert="True"/>
+            <conv:HexToBrushConverter x:Key="HexToBrush"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

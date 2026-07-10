@@ -1,12 +1,302 @@
-﻿<Window x:Class="Focus.MainWindow"
+<Window x:Class="Focus.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Focus"
+        xmlns:vm="clr-namespace:Focus.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="FOCUS"
+        Height="700" Width="1100"
+        MinHeight="480" MinWidth="720"
+        Background="{DynamicResource BgAppBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Closing="Window_Closing">
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource BgToolbarBrush}"
+                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="10,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-    </Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding SidebarToggleLabel}"
+                            Command="{Binding ToggleSidebarCommand}"
+                            Style="{DynamicResource FocusButton}"
+                            Width="36" Margin="0,0,8,0" ToolTip="Toggle sidebar"/>
+                    <TextBlock Text="FOCUS" FontWeight="Bold" FontSize="16"
+                               Foreground="{DynamicResource AccentBrush}"
+                               VerticalAlignment="Center" Margin="0,0,16,0"/>
+                </StackPanel>
+
+                <Grid Grid.Column="1" Margin="8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="200"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="QuickAddBox"
+                             Text="{Binding QuickAddText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{DynamicResource FocusTextBox}"
+                             ToolTip="Quick add a task and press Enter"
+                             KeyDown="QuickAddBox_KeyDown"/>
+                    <Button Grid.Column="2" Content="+ Task"
+                            Command="{Binding NewTaskCommand}"
+                            Style="{DynamicResource AccentButton}"/>
+                    <TextBox Grid.Column="4"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{DynamicResource FocusTextBox}"
+                             ToolTip="Search title / notes"/>
+                </Grid>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="Send list" Command="{Binding SendTodayListCommand}"
+                            Style="{DynamicResource FocusButton}" Margin="0,0,6,0" ToolTip="Send today's open tasks"/>
+                    <Button Content="Export" Command="{Binding ExportCommand}"
+                            Style="{DynamicResource FocusButton}" Margin="0,0,6,0"/>
+                    <Button Content="Import" Command="{Binding ImportCommand}"
+                            Style="{DynamicResource FocusButton}" Margin="0,0,6,0"/>
+                    <Button Content="Theme" Command="{Binding OpenThemeCommand}"
+                            Style="{DynamicResource FocusButton}" Margin="0,0,6,0"/>
+                    <Button Content="Settings" Command="{Binding OpenSettingsCommand}"
+                            Style="{DynamicResource FocusButton}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource BgToolbarBrush}"
+                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="12,6">
+            <DockPanel>
+                <TextBlock Text="{Binding CurrentFilterLabel}"
+                           Foreground="{DynamicResource AccentBrush}"
+                           FontWeight="SemiBold"
+                           Margin="0,0,16,0"/>
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="{DynamicResource TextMutedBrush}"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Body -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="SidebarColumn" Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource BgSidebarBrush}"
+                    BorderBrush="{DynamicResource BorderDefaultBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="6">
+                        <TextBlock x:Name="ViewsHeader" Text="VIEWS" Style="{DynamicResource SectionHeader}"/>
+                        <ItemsControl ItemsSource="{Binding ViewItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:SidebarItemVm}">
+                                    <Button Command="{Binding DataContext.SelectSidebarItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SidebarItemButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource SelectionFgBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <TextBlock Text="{Binding Title}"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <DockPanel Margin="0,4,0,0">
+                            <Button DockPanel.Dock="Right" Content="+"
+                                    Command="{Binding AddFolderCommand}"
+                                    Style="{DynamicResource FocusButton}"
+                                    Width="28" Height="24" Padding="0" Margin="0,10,6,0"
+                                    ToolTip="Add folder"/>
+                            <Button DockPanel.Dock="Right" Content="✎"
+                                    Command="{Binding EditFolderCommand}"
+                                    Style="{DynamicResource FocusButton}"
+                                    Width="28" Height="24" Padding="0" Margin="0,10,4,0"
+                                    ToolTip="Edit selected folder"/>
+                            <TextBlock x:Name="FoldersHeader" Text="FOLDERS" Style="{DynamicResource SectionHeader}"/>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding FolderItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:SidebarItemVm}">
+                                    <Button Command="{Binding DataContext.SelectSidebarItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SidebarItemButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource SelectionFgBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Width="10" Height="10" CornerRadius="2" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                    Background="{Binding Color, Converter={StaticResource HexToBrush}}"/>
+                                            <TextBlock Text="{Binding Title}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="TagsHeader" Text="TAGS" Style="{DynamicResource SectionHeader}"/>
+                        <ItemsControl ItemsSource="{Binding TagItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:SidebarItemVm}">
+                                    <Button Command="{Binding DataContext.SelectSidebarItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SidebarItemButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource SelectionFgBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <TextBlock Text="{Binding Title, StringFormat={}#{0}}"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Task list -->
+            <Grid Grid.Column="1" Margin="12">
+                <ListBox ItemsSource="{Binding Tasks}"
+                         SelectedItem="{Binding SelectedTask}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         MouseDoubleClick="TaskList_MouseDoubleClick">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,0,0,6"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="bd"
+                                                Background="{DynamicResource BgSurfaceBrush}"
+                                                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="0">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:TaskListItemVm}">
+                            <Grid MinHeight="52">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="{Binding FolderBrush}" CornerRadius="6,0,0,6"/>
+                                <CheckBox Grid.Column="1"
+                                          IsChecked="{Binding IsDone, Mode=OneWay}"
+                                          VerticalAlignment="Center"
+                                          Margin="12,0,8,0"
+                                          Style="{DynamicResource FocusCheckBox}"
+                                          Click="CompleteCheck_Click"/>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,8,8,8">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource OverdueBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Subtitle}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding PriorityLabel}"
+                                               Foreground="{DynamicResource WarningBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"
+                                               FontSize="11"/>
+                                    <Button Content="Edit"
+                                            Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{DynamicResource FocusButton}"
+                                            Padding="8,4" Margin="0,0,6,0"/>
+                                    <Button Content="✕"
+                                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{DynamicResource FocusButton}"
+                                            Padding="8,4"
+                                            ToolTip="Delete"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Text="{Binding EmptyMessage}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           FontSize="15"
+                           Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Grid>
+    </DockPanel>
 </Window>

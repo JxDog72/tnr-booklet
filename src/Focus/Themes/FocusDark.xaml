@@ -1,0 +1,125 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="BgAppBrush" Color="#0A0A0C"/>
+    <SolidColorBrush x:Key="BgSidebarBrush" Color="#0E0E12"/>
+    <SolidColorBrush x:Key="BgToolbarBrush" Color="#121216"/>
+    <SolidColorBrush x:Key="BgSurfaceBrush" Color="#121216"/>
+    <SolidColorBrush x:Key="BgSurfaceAltBrush" Color="#1A1A22"/>
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#1F1F24"/>
+    <SolidColorBrush x:Key="BorderFocusBrush" Color="#A78BFA"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#6B7280"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#A78BFA"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#34D399"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="OverdueBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="SelectionBgBrush" Color="#1A1528"/>
+    <SolidColorBrush x:Key="SelectionFgBrush" Color="#A78BFA"/>
+
+    <Style TargetType="Window">
+        <Setter Property="Background" Value="{DynamicResource BgAppBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="FocusButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceAltBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource FocusButton}">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="#0A0A0C"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="SidebarItemButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SelectionFgBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="FocusTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceAltBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+
+    <Style x:Key="FocusCheckBox" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Margin" Value="0,2"/>
+    </Style>
+
+    <Style x:Key="FocusComboBox" TargetType="ComboBox">
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceAltBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+        <Setter Property="Padding" Value="6,4"/>
+    </Style>
+
+    <Style x:Key="SectionHeader" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="10,14,10,6"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+    </Style>
+
+</ResourceDictionary>

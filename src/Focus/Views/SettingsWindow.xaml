@@ -1,0 +1,55 @@
+<Window x:Class="Focus.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings"
+        Height="620" Width="520"
+        MinHeight="480" MinWidth="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgAppBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+    <DockPanel Margin="18">
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Test send" Style="{DynamicResource FocusButton}" Width="96" Margin="0,0,8,0" Click="Test_Click"/>
+                <Button Content="Save" Style="{DynamicResource AccentButton}" Width="96" Margin="0,0,8,0" IsDefault="True" Click="Save_Click"/>
+                <Button Content="Close" Style="{DynamicResource FocusButton}" Width="96" IsCancel="True" Click="Close_Click"/>
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Notifications" Style="{DynamicResource SectionHeader}" Margin="0,0,0,8"/>
+                <CheckBox Content="Toast notifications" IsChecked="{Binding ToastEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="Sound" IsChecked="{Binding SoundEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="Popup / focus main window" IsChecked="{Binding PopupFocusEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="System tray icon" IsChecked="{Binding TrayEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="Close to tray" IsChecked="{Binding CloseToTray}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="Pause all notifications" IsChecked="{Binding NotificationsPaused}" Style="{DynamicResource FocusCheckBox}"/>
+
+                <TextBlock Text="Sound path (optional .wav)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,10,0,4"/>
+                <TextBox Text="{Binding SoundPath, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}"/>
+
+                <TextBlock Text="Task Scheduler" Style="{DynamicResource SectionHeader}" Margin="0,16,0,8"/>
+                <CheckBox Content="Register Windows Task Scheduler reminders" IsChecked="{Binding TaskSchedulerEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <CheckBox Content="Wake computer to run" IsChecked="{Binding WakeToRun}" Style="{DynamicResource FocusCheckBox}"/>
+
+                <TextBlock Text="Telegram" Style="{DynamicResource SectionHeader}" Margin="0,16,0,8"/>
+                <CheckBox Content="Enable Telegram" IsChecked="{Binding TelegramEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <TextBlock Text="Bot token" Foreground="{DynamicResource TextMutedBrush}" Margin="0,8,0,4"/>
+                <TextBox Text="{Binding TelegramBotToken, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}"/>
+                <TextBlock Text="Chat id" Foreground="{DynamicResource TextMutedBrush}" Margin="0,8,0,4"/>
+                <TextBox Text="{Binding TelegramChatId, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}"/>
+
+                <TextBlock Text="Discord" Style="{DynamicResource SectionHeader}" Margin="0,16,0,8"/>
+                <CheckBox Content="Enable Discord" IsChecked="{Binding DiscordEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                <TextBlock Text="Webhook URL" Foreground="{DynamicResource TextMutedBrush}" Margin="0,8,0,4"/>
+                <TextBox Text="{Binding DiscordWebhookUrl, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}"/>
+                <CheckBox Content="Also message on reminder fire" IsChecked="{Binding MessagingOnReminder}"
+                          Style="{DynamicResource FocusCheckBox}" Margin="0,10,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
