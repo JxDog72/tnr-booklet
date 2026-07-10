@@ -1,0 +1,10 @@
+.superpowers/
+bin/
+obj/
+.vs/
+*.user
+*.suo
+publish/
+*.db
+*.db-shm
+*.db-wal
