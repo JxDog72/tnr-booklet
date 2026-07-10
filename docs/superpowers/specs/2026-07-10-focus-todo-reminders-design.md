@@ -296,3 +296,34 @@ Exact solution structure may adjust slightly during implementation planning; kee
 - Theme fully recolorable; folders have custom accents
 - Export/import restores data
 - Idle resource use remains modest (no Electron-class footprint)
+
+## 15. Optional messaging bridges (Telegram / Discord)
+
+Added mid-implementation at user request. **Opt-in only; off by default.**
+
+### Purpose
+Push a todo/reminder summary (or a single reminder) to the user via Telegram and/or Discord without cloud sync of the database.
+
+### How it works (technical reality)
+
+| Channel | Mechanism | Addressing |
+|---------|-----------|------------|
+| **Telegram** | Official Bot API sendMessage over HTTPS | Requires a **bot token** (from @BotFather) and a **chat id**. The user must press **Start** on the bot once. Plain @username alone is not reliable for private DMs until the bot has a chat id. |
+| **Discord** | Incoming **webhook** URL to a channel | Webhook posts into a channel the user controls (e.g. private #focus-reminders). True DMs-by-username need a full bot + numeric user id; v1 uses webhooks for simplicity and low compute. |
+
+### Settings (in AppSettings / Settings UI)
+- TelegramEnabled, TelegramBotToken, TelegramChatId
+- DiscordEnabled, DiscordWebhookUrl
+- MessagingOnReminder — also send when a reminder fires
+- Manual actions: **Send today's list**, **Send test message**
+
+### Security
+- Tokens stored only in local settings.json under %LocalAppData%\Focus\
+- Never log full tokens
+- No inbound servers; app only makes outbound HTTPS when sending
+- Failures show a non-fatal UI banner (task still saved / toast still works)
+
+### Non-goals for messaging v1
+- Multi-account team bots
+- Receiving commands from Telegram/Discord to create tasks (can be a later feature)
+- Guaranteed delivery if offline (queue optional later)

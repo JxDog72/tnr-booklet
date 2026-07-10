@@ -1390,3 +1390,31 @@ git commit -m "docs: README and v1 polish for FOCUS"
 ## Execution handoff
 
 After this plan is accepted, implement **task-by-task** with commits as specified. Prefer running tests after each Core task before moving to UI.
+
+---
+
+### Task 14: Telegram + Discord messaging bridges
+
+**Files:**
+- Modify: `src/Focus.Core/Models/AppSettings.cs` — messaging fields
+- Create: `src/Focus.Core/Services/Messaging/IMessageBridge.cs`
+- Create: `src/Focus.Core/Services/Messaging/TodoListFormatter.cs`
+- Create: `src/Focus.Core/Services/Messaging/TelegramMessageBridge.cs`
+- Create: `src/Focus.Core/Services/Messaging/DiscordMessageBridge.cs`
+- Create: `src/Focus.Core/Services/Messaging/MessagingService.cs`
+- Create: `tests/Focus.Tests/TodoListFormatterTests.cs`
+- Create: `tests/Focus.Tests/MessagingServiceTests.cs` (HttpMessageHandler fake)
+- Modify: Settings UI + MainViewModel toolbar actions
+- Modify: NotificationService / --remind path to call MessagingService when enabled
+
+**Behavior:**
+1. `TodoListFormatter.FormatSummary(IEnumerable<TaskItem>, folders, title)` produces plain text list
+2. Telegram: POST `https://api.telegram.org/bot{token}/sendMessage` JSON chat_id + text (truncate to 4000 chars)
+3. Discord: POST webhook JSON `{ "content": "..." }` (truncate to 2000 chars; split if needed)
+4. Settings: toggles + token/chat/webhook fields + Test button
+5. Toolbar: Send today's list
+6. On reminder fire: if MessagingOnReminder, send short reminder line (+ optional today list)
+
+**TDD:** Formatter tests; MessagingService with mocked HttpClient does not throw on 200; handles 401 gracefully.
+
+**Commit:** `feat: optional Telegram and Discord list/reminder messaging`
