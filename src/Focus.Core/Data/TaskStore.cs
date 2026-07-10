@@ -58,6 +58,7 @@ public sealed class TaskStore : IDisposable
               rec_time TEXT NOT NULL DEFAULT '09:00',
               rec_interval INTEGER NOT NULL DEFAULT 1,
               rec_next_fire_local TEXT,
+              kind INTEGER NOT NULL DEFAULT 0,
               FOREIGN KEY(folder_id) REFERENCES folders(id)
             );
             CREATE TABLE IF NOT EXISTS task_tags (
@@ -67,6 +68,7 @@ public sealed class TaskStore : IDisposable
             );
             """;
         cmd.ExecuteNonQuery();
+        EnsureColumn("tasks", "kind", "INTEGER NOT NULL DEFAULT 0");
 
         if (GetFolders().Count == 0)
         {
@@ -196,7 +198,7 @@ public sealed class TaskStore : IDisposable
     {
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
-            SELECT id, title, notes, folder_id, status, priority,
+            SELECT id, title, notes, folder_id, status, priority, kind,
                    due_at_local, reminder_at_local, completed_at_utc,
                    created_at_utc, updated_at_utc,
                    rec_kind, rec_weekdays, rec_time, rec_interval, rec_next_fire_local
@@ -224,12 +226,12 @@ public sealed class TaskStore : IDisposable
             cmd.Transaction = tx;
             cmd.CommandText = """
                 INSERT INTO tasks (
-                  id, title, notes, folder_id, status, priority,
+                  id, title, notes, folder_id, status, priority, kind,
                   due_at_local, reminder_at_local, completed_at_utc,
                   created_at_utc, updated_at_utc,
                   rec_kind, rec_weekdays, rec_time, rec_interval, rec_next_fire_local
                 ) VALUES (
-                  $id, $title, $notes, $folder_id, $status, $priority,
+                  $id, $title, $notes, $folder_id, $status, $priority, $kind,
                   $due, $reminder, $completed,
                   $created, $updated,
                   $rec_kind, $rec_weekdays, $rec_time, $rec_interval, $rec_next
@@ -240,6 +242,7 @@ public sealed class TaskStore : IDisposable
                   folder_id = excluded.folder_id,
                   status = excluded.status,
                   priority = excluded.priority,
+                  kind = excluded.kind,
                   due_at_local = excluded.due_at_local,
                   reminder_at_local = excluded.reminder_at_local,
                   completed_at_utc = excluded.completed_at_utc,
@@ -257,6 +260,7 @@ public sealed class TaskStore : IDisposable
             cmd.Parameters.AddWithValue("$folder_id", task.FolderId);
             cmd.Parameters.AddWithValue("$status", (int)task.Status);
             cmd.Parameters.AddWithValue("$priority", (int)task.Priority);
+            cmd.Parameters.AddWithValue("$kind", (int)task.Kind);
             cmd.Parameters.AddWithValue("$due", ToDbLocal(task.DueAtLocal));
             cmd.Parameters.AddWithValue("$reminder", ToDbLocal(task.ReminderAtLocal));
             cmd.Parameters.AddWithValue("$completed", ToDbUtc(task.CompletedAtUtc));
@@ -352,7 +356,7 @@ public sealed class TaskStore : IDisposable
         var todayDate = today.ToString("yyyy-MM-dd");
 
         var sql = """
-            SELECT DISTINCT t.id, t.title, t.notes, t.folder_id, t.status, t.priority,
+            SELECT DISTINCT t.id, t.title, t.notes, t.folder_id, t.status, t.priority, t.kind,
                    t.due_at_local, t.reminder_at_local, t.completed_at_utc,
                    t.created_at_utc, t.updated_at_utc,
                    t.rec_kind, t.rec_weekdays, t.rec_time, t.rec_interval, t.rec_next_fire_local
@@ -457,32 +461,65 @@ public sealed class TaskStore : IDisposable
         return ids;
     }
 
+    private void EnsureColumn(string table, string column, string definition)
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = $"PRAGMA table_info({table});";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+        reader.Close();
+
+        using var alter = _connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        alter.ExecuteNonQuery();
+    }
+
     private static TaskItem ReadTask(SqliteDataReader reader)
     {
-        var recTime = reader.GetString(13);
+        string GetStr(string name) => reader.GetString(reader.GetOrdinal(name));
+        int GetInt(string name) => reader.GetInt32(reader.GetOrdinal(name));
+        bool IsNull(string name) => reader.IsDBNull(reader.GetOrdinal(name));
+        string? GetStrOrNull(string name) => IsNull(name) ? null : GetStr(name);
+
+        var recTime = GetStr("rec_time");
         if (!TimeOnly.TryParse(recTime, out var timeOfDay))
             timeOfDay = new TimeOnly(9, 0);
 
+        var kind = ItemKind.Todo;
+        try
+        {
+            kind = (ItemKind)GetInt("kind");
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // Pre-migration rows / older snapshots
+        }
+
         return new TaskItem
         {
-            Id = reader.GetString(0),
-            Title = reader.GetString(1),
-            Notes = reader.GetString(2),
-            FolderId = reader.GetString(3),
-            Status = (FocusTaskStatus)reader.GetInt32(4),
-            Priority = (TaskPriority)reader.GetInt32(5),
-            DueAtLocal = ParseLocalNullable(reader.IsDBNull(6) ? null : reader.GetString(6)),
-            ReminderAtLocal = ParseLocalNullable(reader.IsDBNull(7) ? null : reader.GetString(7)),
-            CompletedAtUtc = ParseUtcNullable(reader.IsDBNull(8) ? null : reader.GetString(8)),
-            CreatedAtUtc = ParseUtc(reader.GetString(9)),
-            UpdatedAtUtc = ParseUtc(reader.GetString(10)),
+            Id = GetStr("id"),
+            Title = GetStr("title"),
+            Notes = GetStr("notes"),
+            FolderId = GetStr("folder_id"),
+            Status = (FocusTaskStatus)GetInt("status"),
+            Priority = (TaskPriority)GetInt("priority"),
+            Kind = kind,
+            DueAtLocal = ParseLocalNullable(GetStrOrNull("due_at_local")),
+            ReminderAtLocal = ParseLocalNullable(GetStrOrNull("reminder_at_local")),
+            CompletedAtUtc = ParseUtcNullable(GetStrOrNull("completed_at_utc")),
+            CreatedAtUtc = ParseUtc(GetStr("created_at_utc")),
+            UpdatedAtUtc = ParseUtc(GetStr("updated_at_utc")),
             Recurrence = new RecurrenceRule
             {
-                Kind = (RecurrenceKind)reader.GetInt32(11),
-                WeekdaysMask = reader.GetInt32(12),
+                Kind = (RecurrenceKind)GetInt("rec_kind"),
+                WeekdaysMask = GetInt("rec_weekdays"),
                 TimeOfDay = timeOfDay,
-                IntervalN = reader.GetInt32(14),
-                NextFireAtLocal = ParseLocalNullable(reader.IsDBNull(15) ? null : reader.GetString(15))
+                IntervalN = GetInt("rec_interval"),
+                NextFireAtLocal = ParseLocalNullable(GetStrOrNull("rec_next_fire_local"))
             }
         };
     }

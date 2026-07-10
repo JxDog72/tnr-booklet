@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding WindowTitle}"
-        Height="560" Width="520"
+        Height="600" Width="540"
         MinHeight="480" MinWidth="440"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BgAppBrush}"
@@ -16,13 +16,21 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <TextBlock Text="Type" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding Kinds}"
+                          SelectedItem="{Binding Kind}"
+                          Style="{DynamicResource FocusComboBox}"
+                          Margin="0,0,0,12"/>
+
                 <TextBlock Text="Title" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}" Margin="0,0,0,12"/>
 
-                <TextBlock Text="Notes" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                <TextBlock Text="Body / notes" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                 <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
                          Style="{DynamicResource FocusTextBox}"
-                         AcceptsReturn="True" TextWrapping="Wrap" Height="72" Margin="0,0,0,12"/>
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         MinHeight="88" Height="100" Margin="0,0,0,12"
+                         VerticalScrollBarVisibility="Auto"/>
 
                 <Grid Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
@@ -45,57 +53,59 @@
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Text="Due" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
-                    <DatePicker SelectedDate="{Binding DueDate}"/>
-                    <TextBox Grid.Column="2" Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
-                </Grid>
+                <StackPanel Visibility="{Binding ShowScheduleFields, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Due (optional)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <DatePicker SelectedDate="{Binding DueDate}"/>
+                        <TextBox Grid.Column="2" Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
+                    </Grid>
 
-                <TextBlock Text="Reminder" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
-                    <DatePicker SelectedDate="{Binding ReminderDate}"/>
-                    <TextBox Grid.Column="2" Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
-                </Grid>
+                    <TextBlock Text="Reminder (optional timed alert)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <DatePicker SelectedDate="{Binding ReminderDate}"/>
+                        <TextBox Grid.Column="2" Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
+                    </Grid>
 
-                <TextBlock Text="Recurrence" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
-                    <ComboBox ItemsSource="{Binding RecurrenceKinds}"
-                              SelectedItem="{Binding RecurrenceKind}"
-                              Style="{DynamicResource FocusComboBox}"/>
-                    <TextBox Grid.Column="2" Text="{Binding TimeOfDayText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{DynamicResource FocusTextBox}" ToolTip="Time of day HH:mm"/>
-                    <TextBox Grid.Column="4" Text="{Binding IntervalN, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{DynamicResource FocusTextBox}" ToolTip="Interval N (EveryNDays)"/>
-                </Grid>
+                    <TextBlock Text="Recurrence" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding RecurrenceKinds}"
+                                  SelectedItem="{Binding RecurrenceKind}"
+                                  Style="{DynamicResource FocusComboBox}"/>
+                        <TextBox Grid.Column="2" Text="{Binding TimeOfDayText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{DynamicResource FocusTextBox}" ToolTip="Time of day HH:mm"/>
+                        <TextBox Grid.Column="4" Text="{Binding IntervalN, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{DynamicResource FocusTextBox}" ToolTip="Interval N (EveryNDays)"/>
+                    </Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12"
-                            Visibility="{Binding ShowWeekdays, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
-                    <CheckBox Content="Mon" IsChecked="{Binding Mon}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Tue" IsChecked="{Binding Tue}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Wed" IsChecked="{Binding Wed}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Thu" IsChecked="{Binding Thu}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Fri" IsChecked="{Binding Fri}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Sat" IsChecked="{Binding Sat}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
-                    <CheckBox Content="Sun" IsChecked="{Binding Sun}" Style="{DynamicResource FocusCheckBox}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12"
+                                Visibility="{Binding ShowWeekdays, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                        <CheckBox Content="Mon" IsChecked="{Binding Mon}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Tue" IsChecked="{Binding Tue}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Wed" IsChecked="{Binding Wed}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Thu" IsChecked="{Binding Thu}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Fri" IsChecked="{Binding Fri}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Sat" IsChecked="{Binding Sat}" Style="{DynamicResource FocusCheckBox}" Margin="0,0,8,0"/>
+                        <CheckBox Content="Sun" IsChecked="{Binding Sun}" Style="{DynamicResource FocusCheckBox}"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <TextBlock Text="Tags (comma-separated)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>

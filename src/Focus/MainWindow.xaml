@@ -41,16 +41,24 @@
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="180"/>
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="QuickAddBox"
                              Text="{Binding QuickAddText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{DynamicResource FocusTextBox}"
-                             ToolTip="Quick add a task and press Enter"
+                             ToolTip="Quick add a todo and press Enter"
                              KeyDown="QuickAddBox_KeyDown"/>
-                    <Button Grid.Column="2" Content="+ Task"
-                            Command="{Binding NewTaskCommand}"
-                            Style="{DynamicResource AccentButton}"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Content="+ Todo"
+                                Command="{Binding NewTaskCommand}"
+                                Style="{DynamicResource AccentButton}"
+                                Margin="0,0,6,0"
+                                ToolTip="Add a todo (optional due / reminder)"/>
+                        <Button Content="+ Note"
+                                Command="{Binding NewNoteCommand}"
+                                Style="{DynamicResource FocusButton}"
+                                ToolTip="Add a note (no reminder schedule)"/>
+                    </StackPanel>
                     <TextBox Grid.Column="4"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{DynamicResource FocusTextBox}"
@@ -268,6 +276,13 @@
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <Border Background="{DynamicResource BgSurfaceAltBrush}"
+                                            CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding KindLabel}"
+                                                   FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
                                     <TextBlock Text="{Binding PriorityLabel}"
                                                Foreground="{DynamicResource WarningBrush}"
                                                VerticalAlignment="Center"
