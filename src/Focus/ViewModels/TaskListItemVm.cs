@@ -12,10 +12,13 @@ public sealed class TaskListItemVm : ViewModelBase
         Id = task.Id;
         Title = task.Title;
         IsDone = task.Status == FocusTaskStatus.Done;
+        Kind = task.Kind;
+        IsNote = task.Kind == ItemKind.Note;
         FolderColor = folder?.Color ?? "#A78BFA";
         FolderName = folder?.Name ?? "";
         Priority = task.Priority;
-        IsOverdue = task.Status == FocusTaskStatus.Open
+        IsOverdue = task.Kind == ItemKind.Todo
+                    && task.Status == FocusTaskStatus.Open
                     && ((task.DueAtLocal is { } d && d.Date < DateTime.Today)
                         || (task.Recurrence.NextFireAtLocal is { } n && n.Date < DateTime.Today)
                         || (task.ReminderAtLocal is { } r && r.Date < DateTime.Today));
@@ -30,6 +33,9 @@ public sealed class TaskListItemVm : ViewModelBase
     public bool IsDone { get; }
     public bool IsOverdue { get; }
     public bool IsRecurring { get; }
+    public bool IsNote { get; }
+    public ItemKind Kind { get; }
+    public string KindLabel => IsNote ? "NOTE" : "TODO";
     public string FolderColor { get; }
     public string FolderName { get; }
     public TaskPriority Priority { get; }
@@ -56,15 +62,30 @@ public sealed class TaskListItemVm : ViewModelBase
     {
         var parts = new List<string>();
 
-        if (task.DueAtLocal is { } due)
-            parts.Add($"Due {due:g}");
-        else if (task.ReminderAtLocal is { } rem)
-            parts.Add($"Reminder {rem:g}");
-        else if (task.Recurrence.NextFireAtLocal is { } next)
-            parts.Add($"Next {next:g}");
+        if (task.Kind == ItemKind.Note)
+        {
+            parts.Add("Note");
+            if (!string.IsNullOrWhiteSpace(task.Notes))
+            {
+                var preview = task.Notes.Replace("\r", " ").Replace("\n", " ").Trim();
+                if (preview.Length > 60)
+                    preview = preview[..60] + "…";
+                if (preview.Length > 0)
+                    parts.Add(preview);
+            }
+        }
+        else
+        {
+            if (task.DueAtLocal is { } due)
+                parts.Add($"Due {due:g}");
+            else if (task.ReminderAtLocal is { } rem)
+                parts.Add($"Reminder {rem:g}");
+            else if (task.Recurrence.NextFireAtLocal is { } next)
+                parts.Add($"Next {next:g}");
 
-        if (task.Recurrence.IsRecurring)
-            parts.Add(task.Recurrence.Kind.ToString());
+            if (task.Recurrence.IsRecurring)
+                parts.Add(task.Recurrence.Kind.ToString());
+        }
 
         if (task.TagIds.Count > 0)
         {

@@ -1,0 +1,92 @@
+<Window x:Class="Focus.Views.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pick a color"
+        Height="460" Width="420"
+        MinHeight="400" MinWidth="380"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgAppBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        ResizeMode="NoResize">
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="OK" Width="96" Margin="0,0,8,0" Style="{DynamicResource AccentButton}" IsDefault="True" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="96" Style="{DynamicResource FocusButton}" IsCancel="True" Click="Cancel_Click"/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Presets" Style="{DynamicResource SectionHeader}" Margin="0,0,0,8"/>
+                <ItemsControl ItemsSource="{Binding Presets}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="8"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Width="36" Height="36" Margin="3"
+                                    ToolTip="{Binding Name}"
+                                    Command="{Binding DataContext.SelectPresetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                                                BorderThickness="1"/>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="RGB sliders" Style="{DynamicResource SectionHeader}" Margin="0,16,0,8"/>
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="48"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="R" Foreground="#F87171" VerticalAlignment="Center"/>
+                    <Slider Grid.Column="1" Minimum="0" Maximum="255" Value="{Binding R}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="2" Text="{Binding R, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}" Margin="8,0,0,0"/>
+                </Grid>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="48"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="G" Foreground="#34D399" VerticalAlignment="Center"/>
+                    <Slider Grid.Column="1" Minimum="0" Maximum="255" Value="{Binding G}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="2" Text="{Binding G, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}" Margin="8,0,0,0"/>
+                </Grid>
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="48"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="B" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                    <Slider Grid.Column="1" Minimum="0" Maximum="255" Value="{Binding B}" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="2" Text="{Binding B, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource FocusTextBox}" Margin="8,0,0,0"/>
+                </Grid>
+
+                <Border Height="48" CornerRadius="8" Background="{Binding PreviewBrush}"
+                        BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,0,0,8"/>
+                <TextBlock Text="{Binding Hex}" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+
+                <Button Content="Open full color wheel…"
+                        Command="{Binding OpenWheelCommand}"
+                        Style="{DynamicResource FocusButton}"
+                        HorizontalAlignment="Stretch"
+                        Padding="12,10"/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

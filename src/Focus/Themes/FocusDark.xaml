@@ -104,7 +104,57 @@
 
     <Style x:Key="FocusCheckBox" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="Margin" Value="0,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="box"
+                                Width="18" Height="18"
+                                CornerRadius="4"
+                                Background="{DynamicResource BgSurfaceAltBrush}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1.5"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center">
+                            <Path x:Name="check"
+                                  Data="M3,9 L7,13 L15,4"
+                                  Stroke="{DynamicResource SuccessBrush}"
+                                  StrokeThickness="2"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Visibility="Collapsed"
+                                  Margin="1"/>
+                        </Border>
+                        <ContentPresenter VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="check" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="box" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SettingsCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
     </Style>
 
     <Style x:Key="FocusComboBox" TargetType="ComboBox">

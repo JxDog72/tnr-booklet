@@ -22,7 +22,7 @@ public sealed class SchedulerSyncService
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (!_enabled)
+        if (!_enabled || task.Kind == ItemKind.Note)
         {
             _scheduler.RemoveReminder(task.Id);
             return;

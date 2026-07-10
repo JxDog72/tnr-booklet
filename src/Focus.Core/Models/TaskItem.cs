@@ -6,6 +6,7 @@ public sealed class TaskItem
     public string Title { get; set; } = "";
     public string Notes { get; set; } = "";
     public string FolderId { get; set; } = "";
+    public ItemKind Kind { get; set; } = ItemKind.Todo;
     public FocusTaskStatus Status { get; set; } = FocusTaskStatus.Open;
     public TaskPriority Priority { get; set; } = TaskPriority.None;
     public DateTime? DueAtLocal { get; set; }

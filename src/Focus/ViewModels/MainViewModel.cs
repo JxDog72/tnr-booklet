@@ -35,7 +35,8 @@ public sealed class MainViewModel : ViewModelBase
         ToggleSidebarCommand = new RelayCommand(ToggleSidebar);
         SelectSidebarItemCommand = new RelayCommand(SelectSidebarItem);
         QuickAddCommand = new RelayCommand(QuickAdd, () => !string.IsNullOrWhiteSpace(QuickAddText));
-        NewTaskCommand = new RelayCommand(NewTask);
+        NewTaskCommand = new RelayCommand(() => OpenEditor(ItemKind.Todo));
+        NewNoteCommand = new RelayCommand(() => OpenEditor(ItemKind.Note));
         EditTaskCommand = new RelayCommand(p => EditTask(p as TaskListItemVm ?? SelectedTask), _ => SelectedTask is not null || _ is TaskListItemVm);
         CompleteTaskCommand = new RelayCommand(p => CompleteTask(p as TaskListItemVm ?? SelectedTask));
         DeleteTaskCommand = new RelayCommand(p => DeleteTask(p as TaskListItemVm ?? SelectedTask), _ => SelectedTask is not null || _ is TaskListItemVm);
@@ -60,6 +61,7 @@ public sealed class MainViewModel : ViewModelBase
     public RelayCommand SelectSidebarItemCommand { get; }
     public RelayCommand QuickAddCommand { get; }
     public RelayCommand NewTaskCommand { get; }
+    public RelayCommand NewNoteCommand { get; }
     public RelayCommand EditTaskCommand { get; }
     public RelayCommand CompleteTaskCommand { get; }
     public RelayCommand DeleteTaskCommand { get; }
@@ -297,6 +299,7 @@ public sealed class MainViewModel : ViewModelBase
         {
             Title = title,
             FolderId = folderId,
+            Kind = ItemKind.Todo,
             Status = FocusTaskStatus.Open,
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow
@@ -304,14 +307,14 @@ public sealed class MainViewModel : ViewModelBase
         PersistAndSync(task);
         QuickAddText = "";
         RefreshTasksOnly();
-        StatusText = $"Added “{title}”";
+        StatusText = $"Added todo “{title}”";
     }
 
-    private void NewTask()
+    private void OpenEditor(ItemKind kind)
     {
         var folders = _services.Store.GetFolders();
         var tags = _services.Store.GetTags();
-        var vm = new TaskEditorViewModel(null, folders, tags);
+        var vm = new TaskEditorViewModel(null, folders, tags, kind);
         if (_selectedFolderId is not null)
             vm.SelectedFolder = folders.FirstOrDefault(f => f.Id == _selectedFolderId) ?? vm.SelectedFolder;
 
@@ -322,7 +325,9 @@ public sealed class MainViewModel : ViewModelBase
             PersistAndSync(task);
             RebuildSidebar();
             RefreshTasksOnly();
-            StatusText = $"Created “{task.Title}”";
+            StatusText = task.Kind == ItemKind.Note
+                ? $"Created note “{task.Title}”"
+                : $"Created todo “{task.Title}”";
         }
     }
 
@@ -334,7 +339,7 @@ public sealed class MainViewModel : ViewModelBase
 
         var folders = _services.Store.GetFolders();
         var tags = _services.Store.GetTags();
-        var vm = new TaskEditorViewModel(existing, folders, tags);
+        var vm = new TaskEditorViewModel(existing, folders, tags, existing.Kind);
         var dlg = new TaskEditorWindow(vm) { Owner = Wpf.Application.Current?.MainWindow };
         if (dlg.ShowDialog() == true && vm.TryBuild(out var task))
         {
@@ -570,17 +575,16 @@ public sealed class MainViewModel : ViewModelBase
 
     private void AddFolder()
     {
-        var name = PromptText("New folder name:", "FOCUS", "Folder");
-        if (string.IsNullOrWhiteSpace(name))
-            return;
-        var color = PromptText("Folder color (hex):", "FOCUS", "#A78BFA") ?? "#A78BFA";
         var folders = _services.Store.GetFolders();
-        var folder = new Folder
+        var vm = new FolderEditorViewModel(null)
         {
-            Name = name.Trim(),
-            Color = color.Trim(),
             SortOrder = folders.Count == 0 ? 0 : folders.Max(f => f.SortOrder) + 1
         };
+        var dlg = new FolderEditorWindow(vm) { Owner = Wpf.Application.Current?.MainWindow };
+        if (dlg.ShowDialog() != true)
+            return;
+
+        var folder = vm.ToFolder();
         _services.Store.UpsertFolder(folder);
         RebuildSidebar();
         StatusText = $"Folder “{folder.Name}” added.";
@@ -597,16 +601,16 @@ public sealed class MainViewModel : ViewModelBase
         var folder = _services.Store.GetFolders().FirstOrDefault(f => f.Id == _selectedFolderId);
         if (folder is null) return;
 
-        var name = PromptText("Folder name:", "FOCUS", folder.Name);
-        if (string.IsNullOrWhiteSpace(name))
+        var vm = new FolderEditorViewModel(folder);
+        var dlg = new FolderEditorWindow(vm) { Owner = Wpf.Application.Current?.MainWindow };
+        if (dlg.ShowDialog() != true)
             return;
-        var color = PromptText("Folder color (hex):", "FOCUS", folder.Color) ?? folder.Color;
-        folder.Name = name.Trim();
-        folder.Color = color.Trim();
-        _services.Store.UpsertFolder(folder);
+
+        var updated = vm.ToFolder();
+        _services.Store.UpsertFolder(updated);
         RebuildSidebar();
         RefreshTasksOnly();
-        StatusText = $"Folder “{folder.Name}” updated.";
+        StatusText = $"Folder “{updated.Name}” updated.";
     }
 
     private static string? PromptText(string message, string title, string defaultValue)

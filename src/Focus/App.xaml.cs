@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Threading;
 using Focus.Core.Recurrence;
 using Focus.Services;
 using Focus.Themes;
@@ -9,12 +10,35 @@ public partial class App : System.Windows.Application
 {
     private AppServices? _services;
     private SingleInstanceService? _singleInstance;
+    private EventWaitHandle? _showListener;
+    private Thread? _showListenerThread;
 
-    protected override async void OnStartup(StartupEventArgs e)
+    protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        var args = e.Args ?? Array.Empty<string>();
+        // Surface crashes instead of silently closing.
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
+        try
+        {
+            StartCore(e.Args ?? Array.Empty<string>());
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                "FOCUS failed to start:\n\n" + ex,
+                "FOCUS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown(1);
+        }
+    }
+
+    private void StartCore(string[] args)
+    {
         var remindId = ParseRemindId(args);
 
         _services = new AppServices();
@@ -31,22 +55,90 @@ public partial class App : System.Windows.Application
 
         if (remindId is not null)
         {
-            await HandleRemindAsync(remindId);
-            Shutdown();
+            // Fire-and-forget path for Task Scheduler (no main window).
+            _ = HandleRemindThenExitAsync(remindId);
             return;
         }
 
         _singleInstance = new SingleInstanceService();
         if (!_singleInstance.TryAcquire())
         {
-            SingleInstanceService.TryActivateExisting();
+            SingleInstanceService.RequestShowExisting();
+            System.Windows.MessageBox.Show(
+                "FOCUS is already running.\n\nCheck the taskbar or the system tray (near the clock).",
+                "FOCUS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
             Shutdown();
             return;
+        }
+
+        // Second-launch signal: show/restore main window.
+        try
+        {
+            _showListener = SingleInstanceService.CreateShowListener();
+            _showListenerThread = new Thread(ShowListenerLoop)
+            {
+                IsBackground = true,
+                Name = "FOCUS.ShowListener"
+            };
+            _showListenerThread.Start();
+        }
+        catch
+        {
+            // Optional feature.
         }
 
         var main = new MainWindow(_services);
         MainWindow = main;
         main.Show();
+        main.Activate();
+        main.WindowState = WindowState.Normal;
+    }
+
+    private void ShowListenerLoop()
+    {
+        var handle = _showListener;
+        if (handle is null) return;
+
+        while (true)
+        {
+            try
+            {
+                handle.WaitOne();
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (MainWindow is null) return;
+                    MainWindow.Show();
+                    MainWindow.WindowState = WindowState.Normal;
+                    MainWindow.Activate();
+                });
+            }
+            catch
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task HandleRemindThenExitAsync(string taskId)
+    {
+        try
+        {
+            await HandleRemindAsync(taskId);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                System.Windows.MessageBox.Show("Reminder error:\n" + ex.Message, "FOCUS");
+            }
+            catch { /* ignore */ }
+        }
+        finally
+        {
+            Shutdown();
+        }
     }
 
     private async Task HandleRemindAsync(string taskId)
@@ -147,8 +239,37 @@ public partial class App : System.Windows.Application
         return Path.Combine(dataDir, $"last-fire-{safe}.txt");
     }
 
+    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        System.Windows.MessageBox.Show(
+            "Unexpected error:\n\n" + e.Exception,
+            "FOCUS",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        e.Handled = true;
+    }
+
+    private static void OnDomainUnhandledException(object? sender, UnhandledExceptionEventArgs e)
+    {
+        try
+        {
+            System.Windows.MessageBox.Show(
+                "Fatal error:\n\n" + e.ExceptionObject,
+                "FOCUS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        catch { /* ignore */ }
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        e.SetObserved();
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
+        try { _showListener?.Dispose(); } catch { /* ignore */ }
         _singleInstance?.Dispose();
         _services?.Dispose();
         base.OnExit(e);

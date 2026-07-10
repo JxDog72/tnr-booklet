@@ -9,6 +9,7 @@ public sealed class TaskEditorViewModel : ViewModelBase
     private string _title = "";
     private string _notes = "";
     private Folder? _selectedFolder;
+    private ItemKind _kind = ItemKind.Todo;
     private TaskPriority _priority = TaskPriority.None;
     private DateTime? _dueDate;
     private string _dueTimeText = "";
@@ -20,11 +21,12 @@ public sealed class TaskEditorViewModel : ViewModelBase
     private int _intervalN = 1;
     private string _tagsText = "";
 
-    public TaskEditorViewModel(TaskItem? existing, IReadOnlyList<Folder> folders, IReadOnlyList<Tag> tags)
+    public TaskEditorViewModel(TaskItem? existing, IReadOnlyList<Folder> folders, IReadOnlyList<Tag> tags, ItemKind defaultKind = ItemKind.Todo)
     {
         Folders = new ObservableCollection<Folder>(folders);
         AvailableTags = tags;
         IsNew = existing is null;
+        Kind = existing?.Kind ?? defaultKind;
 
         if (existing is null)
         {
@@ -35,6 +37,7 @@ public sealed class TaskEditorViewModel : ViewModelBase
         SourceId = existing.Id;
         Title = existing.Title;
         Notes = existing.Notes;
+        Kind = existing.Kind;
         SelectedFolder = Folders.FirstOrDefault(f => f.Id == existing.FolderId) ?? Folders.FirstOrDefault();
         Priority = existing.Priority;
         if (existing.DueAtLocal is { } due)
@@ -70,8 +73,13 @@ public sealed class TaskEditorViewModel : ViewModelBase
     public IReadOnlyList<Tag> AvailableTags { get; }
     public IReadOnlyList<TaskPriority> Priorities { get; } = Enum.GetValues<TaskPriority>();
     public IReadOnlyList<RecurrenceKind> RecurrenceKinds { get; } = Enum.GetValues<RecurrenceKind>();
+    public IReadOnlyList<ItemKind> Kinds { get; } = Enum.GetValues<ItemKind>();
 
-    public string WindowTitle => IsNew ? "New task" : "Edit task";
+    public string WindowTitle => IsNew
+        ? (Kind == ItemKind.Note ? "New note" : "New todo")
+        : (Kind == ItemKind.Note ? "Edit note" : "Edit todo");
+
+    public bool ShowScheduleFields => Kind == ItemKind.Todo;
 
     public string Title
     {
@@ -89,6 +97,27 @@ public sealed class TaskEditorViewModel : ViewModelBase
     {
         get => _selectedFolder;
         set => SetProperty(ref _selectedFolder, value);
+    }
+
+    public ItemKind Kind
+    {
+        get => _kind;
+        set
+        {
+            if (SetProperty(ref _kind, value))
+            {
+                RaisePropertyChanged(nameof(ShowScheduleFields));
+                RaisePropertyChanged(nameof(WindowTitle));
+                if (value == ItemKind.Note)
+                {
+                    DueDate = null;
+                    DueTimeText = "";
+                    ReminderDate = null;
+                    ReminderTimeText = "";
+                    RecurrenceKind = RecurrenceKind.None;
+                }
+            }
+        }
     }
 
     public TaskPriority Priority
@@ -178,32 +207,39 @@ public sealed class TaskEditorViewModel : ViewModelBase
             return false;
         }
 
-        var due = CombineDateTime(DueDate, DueTimeText);
-        var reminder = CombineDateTime(ReminderDate, ReminderTimeText);
-        if (!TryParseTime(TimeOfDayText, out var timeOfDay))
-            timeOfDay = new TimeOnly(9, 0);
+        DateTime? due = null;
+        DateTime? reminder = null;
+        var rule = new RecurrenceRule();
 
-        var mask = 0;
-        if (Mon) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Monday);
-        if (Tue) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Tuesday);
-        if (Wed) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Wednesday);
-        if (Thu) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Thursday);
-        if (Fri) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Friday);
-        if (Sat) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Saturday);
-        if (Sun) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Sunday);
-
-        var rule = new RecurrenceRule
+        if (Kind == ItemKind.Todo)
         {
-            Kind = RecurrenceKind,
-            WeekdaysMask = mask,
-            TimeOfDay = timeOfDay,
-            IntervalN = Math.Max(1, IntervalN)
-        };
+            due = CombineDateTime(DueDate, DueTimeText);
+            reminder = CombineDateTime(ReminderDate, ReminderTimeText);
+            if (!TryParseTime(TimeOfDayText, out var timeOfDay))
+                timeOfDay = new TimeOnly(9, 0);
 
-        if (rule.IsRecurring)
-        {
-            rule.NextFireAtLocal = RecurrenceCalculator.GetNextFireLocal(rule, DateTime.Now);
-            reminder ??= rule.NextFireAtLocal;
+            var mask = 0;
+            if (Mon) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Monday);
+            if (Tue) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Tuesday);
+            if (Wed) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Wednesday);
+            if (Thu) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Thursday);
+            if (Fri) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Friday);
+            if (Sat) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Saturday);
+            if (Sun) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Sunday);
+
+            rule = new RecurrenceRule
+            {
+                Kind = RecurrenceKind,
+                WeekdaysMask = mask,
+                TimeOfDay = timeOfDay,
+                IntervalN = Math.Max(1, IntervalN)
+            };
+
+            if (rule.IsRecurring)
+            {
+                rule.NextFireAtLocal = RecurrenceCalculator.GetNextFireLocal(rule, DateTime.Now);
+                reminder ??= rule.NextFireAtLocal;
+            }
         }
 
         var tagIds = ResolveTagIds();
@@ -214,6 +250,7 @@ public sealed class TaskEditorViewModel : ViewModelBase
             Title = Title.Trim(),
             Notes = Notes ?? "",
             FolderId = SelectedFolder.Id,
+            Kind = Kind,
             Status = FocusTaskStatus.Open,
             Priority = Priority,
             DueAtLocal = due,
