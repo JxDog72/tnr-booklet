@@ -1238,7 +1238,7 @@ Register AUMID early in App startup:
 For unpackaged WPF, set in App constructor:
 
 ```csharp
-DesktopNotificationManagerCompat.RegisterAumidAndComServer<MyNotificationActivator>("JimmyB.Focus");
+DesktopNotificationManagerCompat.RegisterAumidAndComServer<MyNotificationActivator>("Focus.App");
 DesktopNotificationManagerCompat.RegisterActivator<MyNotificationActivator>();
 ```
 
@@ -1396,7 +1396,7 @@ After this plan is accepted, implement **task-by-task** with commits as specifie
 ### Task 14: Telegram + Discord messaging bridges
 
 **Files:**
-- Modify: `src/Focus.Core/Models/AppSettings.cs` — messaging fields
+- Modify: `src/Focus.Core/Models/AppSettings.cs` ï¿½ messaging fields
 - Create: `src/Focus.Core/Services/Messaging/IMessageBridge.cs`
 - Create: `src/Focus.Core/Services/Messaging/TodoListFormatter.cs`
 - Create: `src/Focus.Core/Services/Messaging/TelegramMessageBridge.cs`

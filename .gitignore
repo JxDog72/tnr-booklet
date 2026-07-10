@@ -10,3 +10,13 @@ publish/
 *.db-wal
 
 .worktrees/
+
+# Local secrets / machine data (never commit)
+settings.json
+themes.json
+**/appsettings.*.local.json
+*.local.json
+.env
+.env.*
+*.pem
+*.pfx
