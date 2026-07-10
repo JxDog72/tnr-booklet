@@ -5,8 +5,8 @@ namespace Focus.Services;
 public sealed class SingleInstanceService : IDisposable
 {
     // Local\ avoids admin requirements of Global\ and is enough for one user session.
-    public const string MutexName = @"Local\JimmyB.Focus.SingleInstance";
-    public const string ShowEventName = @"Local\JimmyB.Focus.ShowWindow";
+    public const string MutexName = @"Local\Focus.App.SingleInstance";
+    public const string ShowEventName = @"Local\Focus.App.ShowWindow";
 
     private Mutex? _mutex;
     private bool _owned;

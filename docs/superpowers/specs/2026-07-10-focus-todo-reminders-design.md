@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10  
 **Status:** Approved for implementation planning  
-**Location:** `C:\Users\JimmyB\OneDrive\GrokBuild\todoReminders`
+**Location:** project repository root (local clone)
 
 ## 1. Summary
 
@@ -314,7 +314,7 @@ Push a todo/reminder summary (or a single reminder) to the user via Telegram and
 ### Settings (in AppSettings / Settings UI)
 - TelegramEnabled, TelegramBotToken, TelegramChatId
 - DiscordEnabled, DiscordWebhookUrl
-- MessagingOnReminder — also send when a reminder fires
+- MessagingOnReminder ï¿½ also send when a reminder fires
 - Manual actions: **Send today's list**, **Send test message**
 
 ### Security
