@@ -311,6 +311,39 @@ public sealed class TaskStore : IDisposable
         tx.Commit();
     }
 
+    /// <summary>
+    /// Deletes all task_tags, tasks, tags, and folders. Does not re-seed defaults.
+    /// </summary>
+    public void ClearAll()
+    {
+        using var tx = _connection.BeginTransaction();
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "DELETE FROM task_tags;";
+            cmd.ExecuteNonQuery();
+        }
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "DELETE FROM tasks;";
+            cmd.ExecuteNonQuery();
+        }
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "DELETE FROM tags;";
+            cmd.ExecuteNonQuery();
+        }
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "DELETE FROM folders;";
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
     public IReadOnlyList<TaskItem> QueryTasks(SmartView view, string? folderId, string? tagId)
     {
         var today = DateTime.Today;
