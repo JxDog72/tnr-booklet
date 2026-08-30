@@ -11,13 +11,17 @@ public sealed class ExportImportService
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(themes);
 
+        var exportedSettings = settings.Clone();
+        exportedSettings.TelegramBotToken = null;
+        exportedSettings.DiscordWebhookUrl = null;
+
         return new ExportBundle
         {
             Version = 1,
             Folders = store.GetFolders().ToList(),
             Tags = store.GetTags().ToList(),
             Tasks = store.QueryTasks(SmartView.All, null, null).ToList(),
-            Settings = settings,
+            Settings = exportedSettings,
             Themes = themes.ToList()
         };
     }

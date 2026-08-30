@@ -69,6 +69,9 @@ public sealed class TaskStore : IDisposable
             """;
         cmd.ExecuteNonQuery();
         EnsureColumn("tasks", "kind", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn("tasks", "progress", "INTEGER NOT NULL DEFAULT 1");
+        EnsureColumn("tasks", "sort_order", "INTEGER NOT NULL DEFAULT 0");
+        BackfillProgressAndSort();
 
         if (GetFolders().Count == 0)
         {
@@ -198,7 +201,7 @@ public sealed class TaskStore : IDisposable
     {
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
-            SELECT id, title, notes, folder_id, status, priority, kind,
+            SELECT id, title, notes, folder_id, status, priority, kind, progress, sort_order,
                    due_at_local, reminder_at_local, completed_at_utc,
                    created_at_utc, updated_at_utc,
                    rec_kind, rec_weekdays, rec_time, rec_interval, rec_next_fire_local
@@ -226,12 +229,12 @@ public sealed class TaskStore : IDisposable
             cmd.Transaction = tx;
             cmd.CommandText = """
                 INSERT INTO tasks (
-                  id, title, notes, folder_id, status, priority, kind,
+                  id, title, notes, folder_id, status, priority, kind, progress, sort_order,
                   due_at_local, reminder_at_local, completed_at_utc,
                   created_at_utc, updated_at_utc,
                   rec_kind, rec_weekdays, rec_time, rec_interval, rec_next_fire_local
                 ) VALUES (
-                  $id, $title, $notes, $folder_id, $status, $priority, $kind,
+                  $id, $title, $notes, $folder_id, $status, $priority, $kind, $progress, $sort,
                   $due, $reminder, $completed,
                   $created, $updated,
                   $rec_kind, $rec_weekdays, $rec_time, $rec_interval, $rec_next
@@ -243,6 +246,8 @@ public sealed class TaskStore : IDisposable
                   status = excluded.status,
                   priority = excluded.priority,
                   kind = excluded.kind,
+                  progress = excluded.progress,
+                  sort_order = excluded.sort_order,
                   due_at_local = excluded.due_at_local,
                   reminder_at_local = excluded.reminder_at_local,
                   completed_at_utc = excluded.completed_at_utc,
@@ -261,6 +266,8 @@ public sealed class TaskStore : IDisposable
             cmd.Parameters.AddWithValue("$status", (int)task.Status);
             cmd.Parameters.AddWithValue("$priority", (int)task.Priority);
             cmd.Parameters.AddWithValue("$kind", (int)task.Kind);
+            cmd.Parameters.AddWithValue("$progress", TaskProgress.Clamp(task.Progress));
+            cmd.Parameters.AddWithValue("$sort", task.SortOrder);
             cmd.Parameters.AddWithValue("$due", ToDbLocal(task.DueAtLocal));
             cmd.Parameters.AddWithValue("$reminder", ToDbLocal(task.ReminderAtLocal));
             cmd.Parameters.AddWithValue("$completed", ToDbUtc(task.CompletedAtUtc));
@@ -357,6 +364,7 @@ public sealed class TaskStore : IDisposable
 
         var sql = """
             SELECT DISTINCT t.id, t.title, t.notes, t.folder_id, t.status, t.priority, t.kind,
+                   t.progress, t.sort_order,
                    t.due_at_local, t.reminder_at_local, t.completed_at_utc,
                    t.created_at_utc, t.updated_at_utc,
                    t.rec_kind, t.rec_weekdays, t.rec_time, t.rec_interval, t.rec_next_fire_local
@@ -421,7 +429,7 @@ public sealed class TaskStore : IDisposable
         if (!string.IsNullOrEmpty(folderId))
             sql += " AND t.folder_id = $folderId";
 
-        sql += " ORDER BY t.created_at_utc;";
+        sql += " ORDER BY t.sort_order, t.created_at_utc;";
 
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = sql;
@@ -459,6 +467,124 @@ public sealed class TaskStore : IDisposable
         while (reader.Read())
             ids.Add(reader.GetString(0));
         return ids;
+    }
+
+    public int NextSortOrder()
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "SELECT COALESCE(MAX(sort_order), -1) FROM tasks;";
+        var value = cmd.ExecuteScalar();
+        var max = value is long l ? (int)l : Convert.ToInt32(value ?? -1);
+        return max + 1;
+    }
+
+    public void ReorderVisible(IReadOnlyList<string> idsInNewOrder)
+    {
+        if (idsInNewOrder.Count == 0)
+            return;
+
+        var current = new List<(string Id, int Sort)>();
+        foreach (var id in idsInNewOrder)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "SELECT sort_order FROM tasks WHERE id = $id;";
+            cmd.Parameters.AddWithValue("$id", id);
+            var value = cmd.ExecuteScalar();
+            if (value is null or DBNull)
+                continue;
+            current.Add((id, Convert.ToInt32(value)));
+        }
+
+        if (current.Count == 0)
+            return;
+
+        var slots = current.Select(x => x.Sort).OrderBy(x => x).ToList();
+        if (slots.Distinct().Count() <= 1)
+            slots = Enumerable.Range(0, current.Count).ToList();
+
+        using var tx = _connection.BeginTransaction();
+        for (var i = 0; i < current.Count; i++)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "UPDATE tasks SET sort_order = $s, updated_at_utc = $u WHERE id = $id;";
+            cmd.Parameters.AddWithValue("$s", slots[i]);
+            cmd.Parameters.AddWithValue("$u", FormatUtc(DateTime.UtcNow));
+            cmd.Parameters.AddWithValue("$id", current[i].Id);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
+    private void BackfillProgressAndSort()
+    {
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE tasks SET progress = 10 WHERE status = 1 AND progress < 10;";
+            cmd.ExecuteNonQuery();
+        }
+
+        using var countCmd = _connection.CreateCommand();
+        countCmd.CommandText = """
+            SELECT COUNT(*), COALESCE(SUM(CASE WHEN sort_order != 0 THEN 1 ELSE 0 END), 0)
+            FROM tasks;
+            """;
+        using var reader = countCmd.ExecuteReader();
+        if (!reader.Read())
+            return;
+        var count = reader.GetInt32(0);
+        var nonzero = reader.GetInt32(1);
+        reader.Close();
+        if (count == 0 || nonzero > 0)
+            return;
+
+        var ids = new List<string>();
+        using (var listCmd = _connection.CreateCommand())
+        {
+            listCmd.CommandText = "SELECT id FROM tasks ORDER BY created_at_utc;";
+            using var idReader = listCmd.ExecuteReader();
+            while (idReader.Read())
+                ids.Add(idReader.GetString(0));
+        }
+
+        for (var i = 0; i < ids.Count; i++)
+        {
+            using var upd = _connection.CreateCommand();
+            upd.CommandText = "UPDATE tasks SET sort_order = $s WHERE id = $id;";
+            upd.Parameters.AddWithValue("$s", i);
+            upd.Parameters.AddWithValue("$id", ids[i]);
+            upd.ExecuteNonQuery();
+        }
+    }
+
+    private static int ReadProgress(SqliteDataReader reader)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal("progress");
+            if (reader.IsDBNull(ordinal))
+                return TaskProgress.Min;
+            return TaskProgress.Clamp(reader.GetInt32(ordinal));
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return TaskProgress.Min;
+        }
+    }
+
+    private static int ReadSortOrder(SqliteDataReader reader)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal("sort_order");
+            if (reader.IsDBNull(ordinal))
+                return 0;
+            return reader.GetInt32(ordinal);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return 0;
+        }
     }
 
     private void EnsureColumn(string table, string column, string definition)
@@ -508,6 +634,8 @@ public sealed class TaskStore : IDisposable
             Status = (FocusTaskStatus)GetInt("status"),
             Priority = (TaskPriority)GetInt("priority"),
             Kind = kind,
+            Progress = ReadProgress(reader),
+            SortOrder = ReadSortOrder(reader),
             DueAtLocal = ParseLocalNullable(GetStrOrNull("due_at_local")),
             ReminderAtLocal = ParseLocalNullable(GetStrOrNull("reminder_at_local")),
             CompletedAtUtc = ParseUtcNullable(GetStrOrNull("completed_at_utc")),

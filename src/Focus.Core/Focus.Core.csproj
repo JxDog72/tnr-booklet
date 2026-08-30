@@ -4,6 +4,10 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>JxDog72</Authors>
+    <Copyright>Copyright (c) 2026 JxDog72</Copyright>
+    <Description>TNR-Booklet core library.</Description>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

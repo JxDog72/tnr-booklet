@@ -4,6 +4,7 @@ using Focus.Core.Models;
 using Focus.Core.Themes;
 using Focus.Services;
 using Focus.Themes;
+using Media = System.Windows.Media;
 
 namespace Focus.ViewModels;
 
@@ -14,10 +15,12 @@ public sealed class ColorFieldVm : ViewModelBase
     public ColorFieldVm(string name, string hex)
     {
         Name = name;
+        DisplayName = ToDisplayName(name);
         _hex = hex;
     }
 
     public string Name { get; }
+    public string DisplayName { get; }
 
     public string Hex
     {
@@ -25,11 +28,35 @@ public sealed class ColorFieldVm : ViewModelBase
         set
         {
             if (SetProperty(ref _hex, value))
+            {
+                RaisePropertyChanged(nameof(Brush));
                 HexChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
+    public Media.Brush Brush
+    {
+        get
+        {
+            if (ThemeApplicator.TryParseColor(_hex, out var c))
+                return new Media.SolidColorBrush(c);
+            return Media.Brushes.Gray;
         }
     }
 
     public event EventHandler? HexChanged;
+
+    private static string ToDisplayName(string name) => name switch
+    {
+        "ComboTypeBg" => "Type drop-down background",
+        "ComboTypeFg" => "Type drop-down text",
+        "ComboFolderBg" => "Folder drop-down background",
+        "ComboFolderFg" => "Folder drop-down text",
+        "ComboPriorityBg" => "Priority drop-down background",
+        "ComboPriorityFg" => "Priority drop-down text",
+        _ => name
+    };
 }
 
 public sealed class ThemeEditorViewModel : ViewModelBase
@@ -151,6 +178,12 @@ public sealed class ThemeEditorViewModel : ViewModelBase
             Overdue = src.Colors.Overdue,
             SelectionBg = src.Colors.SelectionBg,
             SelectionFg = src.Colors.SelectionFg,
+            ComboTypeBg = src.Colors.ComboTypeBg,
+            ComboTypeFg = src.Colors.ComboTypeFg,
+            ComboFolderBg = src.Colors.ComboFolderBg,
+            ComboFolderFg = src.Colors.ComboFolderFg,
+            ComboPriorityBg = src.Colors.ComboPriorityBg,
+            ComboPriorityFg = src.Colors.ComboPriorityFg,
         }
     };
 }

@@ -26,7 +26,7 @@ public sealed class TrayService : IDisposable
             return;
 
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Open FOCUS", null, (_, _) => _showMain());
+        menu.Items.Add("Open TNR-Booklet", null, (_, _) => _showMain());
         menu.Items.Add(new Forms.ToolStripSeparator());
 
         var pauseItem = new Forms.ToolStripMenuItem("Pause notifications")
@@ -45,7 +45,7 @@ public sealed class TrayService : IDisposable
 
         _icon = new Forms.NotifyIcon
         {
-            Text = "FOCUS",
+            Text = "TNR-Booklet",
             Visible = _services.Settings.Current.TrayEnabled,
             ContextMenuStrip = menu,
             Icon = CreateIcon()

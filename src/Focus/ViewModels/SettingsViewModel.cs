@@ -105,7 +105,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         ApplyTo(_services.Settings.Current);
         var messaging = _services.CreateMessaging();
-        var results = await messaging.SendAsync("FOCUS test message ✅");
+        var results = await messaging.SendAsync("TNR-Booklet test message ✅");
         if (results.Count == 0 || results.All(r => r.Error == "no channels"))
         {
             StatusMessage = "No messaging channels enabled/configured.";

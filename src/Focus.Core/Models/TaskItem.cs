@@ -16,4 +16,6 @@ public sealed class TaskItem
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public RecurrenceRule Recurrence { get; set; } = new();
     public List<string> TagIds { get; set; } = new();
+    public int Progress { get; set; } = 1;
+    public int SortOrder { get; set; }
 }

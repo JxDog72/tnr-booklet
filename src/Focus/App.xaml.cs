@@ -29,8 +29,8 @@ public partial class App : System.Windows.Application
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(
-                "FOCUS failed to start:\n\n" + ex,
-                "FOCUS",
+                "TNR-Booklet failed to start:\n\n" + ex,
+                "TNR-Booklet",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             Shutdown(1);
@@ -65,8 +65,8 @@ public partial class App : System.Windows.Application
         {
             SingleInstanceService.RequestShowExisting();
             System.Windows.MessageBox.Show(
-                "FOCUS is already running.\n\nCheck the taskbar or the system tray (near the clock).",
-                "FOCUS",
+                "TNR-Booklet is already running.\n\nCheck the taskbar or the system tray (near the clock).",
+                "TNR-Booklet",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             Shutdown();
@@ -131,7 +131,7 @@ public partial class App : System.Windows.Application
         {
             try
             {
-                System.Windows.MessageBox.Show("Reminder error:\n" + ex.Message, "FOCUS");
+                System.Windows.MessageBox.Show("Reminder error:\n" + ex.Message, "TNR-Booklet");
             }
             catch { /* ignore */ }
         }
@@ -243,7 +243,7 @@ public partial class App : System.Windows.Application
     {
         System.Windows.MessageBox.Show(
             "Unexpected error:\n\n" + e.Exception,
-            "FOCUS",
+            "TNR-Booklet",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
         e.Handled = true;
@@ -255,7 +255,7 @@ public partial class App : System.Windows.Application
         {
             System.Windows.MessageBox.Show(
                 "Fatal error:\n\n" + e.ExceptionObject,
-                "FOCUS",
+                "TNR-Booklet",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }

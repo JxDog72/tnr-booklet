@@ -14,6 +14,17 @@ public partial class ThemeEditorWindow : Window
         DataContext = _vm;
     }
 
+    private void PickColor_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { DataContext: ColorFieldVm field })
+            return;
+
+        var pickerVm = new ColorPickerViewModel(field.Hex);
+        var dlg = new ColorPickerWindow(pickerVm) { Owner = this };
+        if (dlg.ShowDialog() == true)
+            field.Hex = dlg.SelectedHex;
+    }
+
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -22,7 +33,7 @@ public partial class ThemeEditorWindow : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Failed to save theme: {ex.Message}", "FOCUS", MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Windows.MessageBox.Show($"Failed to save theme: {ex.Message}", "TNR-Booklet", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

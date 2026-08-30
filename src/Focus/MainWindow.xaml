@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Focus.ViewModels"
         mc:Ignorable="d"
-        Title="FOCUS"
+        Title="TNR-Booklet"
         Height="700" Width="1100"
         MinHeight="480" MinWidth="720"
         Background="{DynamicResource BgAppBrush}"
@@ -30,7 +30,7 @@
                             Command="{Binding ToggleSidebarCommand}"
                             Style="{DynamicResource FocusButton}"
                             Width="36" Margin="0,0,8,0" ToolTip="Toggle sidebar"/>
-                    <TextBlock Text="FOCUS" FontWeight="Bold" FontSize="16"
+                    <TextBlock Text="TNR-Booklet" FontWeight="Bold" FontSize="16"
                                Foreground="{DynamicResource AccentBrush}"
                                VerticalAlignment="Center" Margin="0,0,16,0"/>
                 </StackPanel>
@@ -197,12 +197,19 @@
 
             <!-- Task list -->
             <Grid Grid.Column="1" Margin="12">
-                <ListBox ItemsSource="{Binding Tasks}"
+                <ListBox x:Name="TaskList"
+                         ItemsSource="{Binding Tasks}"
                          SelectedItem="{Binding SelectedTask}"
                          Background="Transparent"
                          BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         MouseDoubleClick="TaskList_MouseDoubleClick">
+                         AllowDrop="True"
+                         MouseDoubleClick="TaskList_MouseDoubleClick"
+                         PreviewMouseLeftButtonDown="TaskList_PreviewMouseLeftButtonDown"
+                         PreviewMouseMove="TaskList_PreviewMouseMove"
+                         Drop="TaskList_Drop"
+                         DragOver="TaskList_DragOver"
+                         KeyDown="TaskList_KeyDown">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0"/>
@@ -239,43 +246,83 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="4"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Border Grid.Column="0" Background="{Binding FolderBrush}" CornerRadius="6,0,0,6"/>
-                                <CheckBox Grid.Column="1"
+                                <TextBlock Grid.Column="1"
+                                           Text="⋮⋮"
+                                           Tag="DragGrip"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"
+                                           Margin="6,0,2,0"
+                                           Cursor="SizeAll"
+                                           ToolTip="Drag to reorder"/>
+                                <CheckBox Grid.Column="2"
                                           IsChecked="{Binding IsDone, Mode=OneWay}"
                                           VerticalAlignment="Center"
-                                          Margin="12,0,8,0"
+                                          Margin="6,0,8,0"
                                           Style="{DynamicResource FocusCheckBox}"
                                           Click="CompleteCheck_Click"/>
-                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,8,8,8">
-                                    <TextBlock Text="{Binding Title}"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsDone}" Value="True">
-                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource OverdueBrush}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,8,8,8">
+                                    <DockPanel>
+                                        <ItemsControl DockPanel.Dock="Right"
+                                                      ItemsSource="{Binding Ticks}"
+                                                      Margin="8,0,0,0"
+                                                      VerticalAlignment="Center">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type vm:ProgressTickVm}">
+                                                    <Button Width="10" Height="16" Padding="0" Margin="1,0"
+                                                            Cursor="Hand"
+                                                            ToolTip="{Binding Number, StringFormat=Progress {0}/10}"
+                                                            Command="{Binding DataContext.SetProgressCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Width="7" Height="10" CornerRadius="2"
+                                                                        Background="{Binding FillBrush}"
+                                                                        BorderBrush="#3F3F46"
+                                                                        BorderThickness="1"/>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OverdueBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DockPanel>
                                     <TextBlock Text="{Binding Subtitle}"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                FontSize="12"
                                                TextTrimming="CharacterEllipsis"
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
                                     <Border Background="{DynamicResource BgSurfaceAltBrush}"
                                             CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
                                             VerticalAlignment="Center">
@@ -284,7 +331,8 @@
                                                    Foreground="{DynamicResource AccentBrush}"/>
                                     </Border>
                                     <TextBlock Text="{Binding PriorityLabel}"
-                                               Foreground="{DynamicResource WarningBrush}"
+                                               Foreground="{Binding PriorityBrush}"
+                                               FontWeight="{Binding PriorityWeight}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"
                                                FontSize="11"/>

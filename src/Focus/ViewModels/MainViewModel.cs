@@ -39,6 +39,7 @@ public sealed class MainViewModel : ViewModelBase
         NewNoteCommand = new RelayCommand(() => OpenEditor(ItemKind.Note));
         EditTaskCommand = new RelayCommand(p => EditTask(p as TaskListItemVm ?? SelectedTask), _ => SelectedTask is not null || _ is TaskListItemVm);
         CompleteTaskCommand = new RelayCommand(p => CompleteTask(p as TaskListItemVm ?? SelectedTask));
+        SetProgressCommand = new RelayCommand(p => SetProgress(p as ProgressTickVm));
         DeleteTaskCommand = new RelayCommand(p => DeleteTask(p as TaskListItemVm ?? SelectedTask), _ => SelectedTask is not null || _ is TaskListItemVm);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         OpenThemeCommand = new RelayCommand(OpenThemeEditor);
@@ -64,6 +65,7 @@ public sealed class MainViewModel : ViewModelBase
     public RelayCommand NewNoteCommand { get; }
     public RelayCommand EditTaskCommand { get; }
     public RelayCommand CompleteTaskCommand { get; }
+    public RelayCommand SetProgressCommand { get; }
     public RelayCommand DeleteTaskCommand { get; }
     public RelayCommand OpenSettingsCommand { get; }
     public RelayCommand OpenThemeCommand { get; }
@@ -301,6 +303,8 @@ public sealed class MainViewModel : ViewModelBase
             FolderId = folderId,
             Kind = ItemKind.Todo,
             Status = FocusTaskStatus.Open,
+            Progress = TaskProgress.Min,
+            SortOrder = _services.Store.NextSortOrder(),
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow
         };
@@ -321,6 +325,8 @@ public sealed class MainViewModel : ViewModelBase
         var dlg = new TaskEditorWindow(vm) { Owner = Wpf.Application.Current?.MainWindow };
         if (dlg.ShowDialog() == true && vm.TryBuild(out var task))
         {
+            task.Progress = TaskProgress.Min;
+            task.SortOrder = _services.Store.NextSortOrder();
             EnsureNewTags(task);
             PersistAndSync(task);
             RebuildSidebar();
@@ -345,6 +351,8 @@ public sealed class MainViewModel : ViewModelBase
         {
             task.Status = existing.Status;
             task.CompletedAtUtc = existing.CompletedAtUtc;
+            task.Progress = existing.Progress;
+            task.SortOrder = existing.SortOrder;
             EnsureNewTags(task);
             PersistAndSync(task);
             RebuildSidebar();
@@ -359,17 +367,7 @@ public sealed class MainViewModel : ViewModelBase
         var task = _services.Store.GetTask(item.Id);
         if (task is null) return;
 
-        if (task.Status == FocusTaskStatus.Done)
-        {
-            task.Status = FocusTaskStatus.Open;
-            task.CompletedAtUtc = null;
-            task.UpdatedAtUtc = DateTime.UtcNow;
-        }
-        else
-        {
-            ReminderAdvance.OnCompleted(task, DateTime.Now);
-        }
-
+        TaskProgress.ApplyCheckbox(task, DateTime.Now);
         PersistAndSync(task);
         RefreshTasksOnly();
         StatusText = task.Status == FocusTaskStatus.Done
@@ -384,7 +382,7 @@ public sealed class MainViewModel : ViewModelBase
         if (item is null) return;
         var result = Wpf.MessageBox.Show(
             $"Delete “{item.Title}”?",
-            "FOCUS",
+            "TNR-Booklet",
             Wpf.MessageBoxButton.YesNo,
             Wpf.MessageBoxImage.Question);
         if (result != Wpf.MessageBoxResult.Yes)
@@ -399,6 +397,47 @@ public sealed class MainViewModel : ViewModelBase
         _services.Store.DeleteTask(item.Id);
         RefreshTasksOnly();
         StatusText = $"Deleted “{item.Title}”";
+    }
+
+    private void SetProgress(ProgressTickVm? tick)
+    {
+        if (tick is null) return;
+        var task = _services.Store.GetTask(tick.Owner.Id);
+        if (task is null) return;
+
+        TaskProgress.ApplyTick(task, tick.Number, DateTime.Now);
+        PersistAndSync(task);
+        RefreshTasksOnly();
+        StatusText = task.Status == FocusTaskStatus.Done
+            ? $"Completed “{task.Title}”"
+            : $"Progress {task.Progress}/10 — {task.Title}";
+    }
+
+    public void ReorderTask(TaskListItemVm source, TaskListItemVm target)
+    {
+        var ids = Tasks.Select(t => t.Id).ToList();
+        var from = ids.IndexOf(source.Id);
+        var to = ids.IndexOf(target.Id);
+        if (from < 0 || to < 0 || from == to)
+            return;
+
+        ids.RemoveAt(from);
+        ids.Insert(to, source.Id);
+        _services.Store.ReorderVisible(ids);
+        RefreshTasksOnly();
+        SelectedTask = Tasks.FirstOrDefault(t => t.Id == source.Id);
+        StatusText = "Order updated";
+    }
+
+    public void MoveSelected(int delta)
+    {
+        if (SelectedTask is null) return;
+        var list = Tasks.ToList();
+        var index = list.FindIndex(t => t.Id == SelectedTask.Id);
+        var next = index + delta;
+        if (index < 0 || next < 0 || next >= list.Count)
+            return;
+        ReorderTask(list[index], list[next]);
     }
 
     private void EnsureNewTags(TaskItem task)
@@ -466,8 +505,8 @@ public sealed class MainViewModel : ViewModelBase
     {
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "Export FOCUS data",
-            Filter = "FOCUS export (*.json)|*.json|All files (*.*)|*.*",
+            Title = "Export TNR-Booklet data",
+            Filter = "TNR-Booklet export (*.json)|*.json|All files (*.*)|*.*",
             FileName = $"focus-export-{DateTime.Now:yyyyMMdd-HHmm}.json"
         };
         if (dlg.ShowDialog() != true)
@@ -484,22 +523,22 @@ public sealed class MainViewModel : ViewModelBase
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
         File.WriteAllText(dlg.FileName, json);
-        StatusText = $"Exported to {dlg.FileName}";
+        StatusText = $"Exported to {dlg.FileName} (tokens omitted)";
     }
 
     private void Import()
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Import FOCUS data",
-            Filter = "FOCUS export (*.json)|*.json|All files (*.*)|*.*"
+            Title = "Import TNR-Booklet data",
+            Filter = "TNR-Booklet export (*.json)|*.json|All files (*.*)|*.*"
         };
         if (dlg.ShowDialog() != true)
             return;
 
         var confirm = Wpf.MessageBox.Show(
-            "Import will REPLACE all local tasks, folders, tags, settings, and themes. Continue?",
-            "FOCUS Import",
+            "Import will REPLACE all local tasks, folders, tags, settings, and themes. Telegram bot tokens and Discord webhooks are not stored in export files and will be cleared. Continue?",
+            "TNR-Booklet Import",
             Wpf.MessageBoxButton.YesNo,
             Wpf.MessageBoxImage.Warning);
         if (confirm != Wpf.MessageBoxResult.Yes)
@@ -542,7 +581,7 @@ public sealed class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Wpf.MessageBox.Show($"Import failed: {ex.Message}", "FOCUS", Wpf.MessageBoxButton.OK, Wpf.MessageBoxImage.Error);
+            Wpf.MessageBox.Show($"Import failed: {ex.Message}", "TNR-Booklet", Wpf.MessageBoxButton.OK, Wpf.MessageBoxImage.Error);
             StatusText = "Import failed.";
         }
     }
@@ -561,7 +600,7 @@ public sealed class MainViewModel : ViewModelBase
             StatusText = "No messaging channels configured. Open Settings.";
             Wpf.MessageBox.Show(
                 "Enable Telegram and/or Discord in Settings and add credentials, then try again.",
-                "FOCUS",
+                "TNR-Booklet",
                 Wpf.MessageBoxButton.OK,
                 Wpf.MessageBoxImage.Information);
             return;

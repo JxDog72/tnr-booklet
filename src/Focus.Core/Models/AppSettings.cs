@@ -24,4 +24,6 @@ public sealed class AppSettings
     public bool DiscordEnabled { get; set; } = false;
     public string? DiscordWebhookUrl { get; set; }
     public bool MessagingOnReminder { get; set; } = true;
+
+    public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }

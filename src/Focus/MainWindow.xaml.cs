@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using Focus.Services;
 using Focus.ViewModels;
 
@@ -12,6 +13,8 @@ public partial class MainWindow : Window
     private readonly TrayService _tray;
     private readonly MainViewModel _vm;
     private bool _forceClose;
+    private System.Windows.Point _dragStart;
+    private TaskListItemVm? _dragItem;
 
     public MainWindow(AppServices services)
     {
@@ -99,6 +102,87 @@ public partial class MainWindow : Window
     {
         if (sender is System.Windows.Controls.CheckBox { DataContext: TaskListItemVm item })
             _vm.CompleteTaskCommand.Execute(item);
+    }
+
+    private void TaskList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragItem = null;
+        if (FindTaggedAncestor(e.OriginalSource as DependencyObject, "DragGrip") is null)
+            return;
+        _dragItem = FindDataContext<TaskListItemVm>(e.OriginalSource as DependencyObject);
+        _dragStart = e.GetPosition(null);
+    }
+
+    private void TaskList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_dragItem is null || e.LeftButton != MouseButtonState.Pressed)
+            return;
+
+        var pos = e.GetPosition(null);
+        if (Math.Abs(pos.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(pos.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        System.Windows.DragDrop.DoDragDrop(TaskList, _dragItem, System.Windows.DragDropEffects.Move);
+        _dragItem = null;
+    }
+
+    private void TaskList_DragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(TaskListItemVm))
+            ? System.Windows.DragDropEffects.Move
+            : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void TaskList_Drop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(TaskListItemVm)) is not TaskListItemVm source)
+            return;
+        var target = FindDataContext<TaskListItemVm>(e.OriginalSource as DependencyObject);
+        if (target is null || ReferenceEquals(source, target))
+            return;
+        _vm.ReorderTask(source, target);
+    }
+
+    private void TaskList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.Alt)
+            return;
+        if (e.Key is Key.Up)
+        {
+            _vm.MoveSelected(-1);
+            e.Handled = true;
+        }
+        else if (e.Key is Key.Down)
+        {
+            _vm.MoveSelected(1);
+            e.Handled = true;
+        }
+    }
+
+    private static T? FindDataContext<T>(DependencyObject? start) where T : class
+    {
+        var d = start;
+        while (d is not null)
+        {
+            if (d is FrameworkElement { DataContext: T match })
+                return match;
+            d = VisualTreeHelper.GetParent(d);
+        }
+        return null;
+    }
+
+    private static FrameworkElement? FindTaggedAncestor(DependencyObject? start, string tag)
+    {
+        var d = start;
+        while (d is not null)
+        {
+            if (d is FrameworkElement fe && Equals(fe.Tag, tag))
+                return fe;
+            d = VisualTreeHelper.GetParent(d);
+        }
+        return null;
     }
 
     protected override void OnClosed(EventArgs e)

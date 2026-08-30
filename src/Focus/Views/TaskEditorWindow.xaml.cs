@@ -18,7 +18,7 @@ public partial class TaskEditorWindow : Window
     {
         if (!_vm.TryBuild(out _))
         {
-            System.Windows.MessageBox.Show(_vm.ValidationError ?? "Invalid task.", "FOCUS", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show(_vm.ValidationError ?? "Invalid task.", "TNR-Booklet", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         DialogResult = true;

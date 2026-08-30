@@ -1,3 +1,4 @@
+using System.Windows;
 using Focus.Core.Models;
 using Focus.Themes;
 using Media = System.Windows.Media;
@@ -17,6 +18,8 @@ public sealed class TaskListItemVm : ViewModelBase
         FolderColor = folder?.Color ?? "#A78BFA";
         FolderName = folder?.Name ?? "";
         Priority = task.Priority;
+        Progress = TaskProgress.Clamp(task.Progress <= 0 ? TaskProgress.Min : task.Progress);
+        SortOrder = task.SortOrder;
         IsOverdue = task.Kind == ItemKind.Todo
                     && task.Status == FocusTaskStatus.Open
                     && ((task.DueAtLocal is { } d && d.Date < DateTime.Today)
@@ -24,6 +27,9 @@ public sealed class TaskListItemVm : ViewModelBase
                         || (task.ReminderAtLocal is { } r && r.Date < DateTime.Today));
         IsRecurring = task.Recurrence.IsRecurring;
         Subtitle = BuildSubtitle(task, allTags);
+        Ticks = Enumerable.Range(TaskProgress.Min, TaskProgress.Max)
+            .Select(n => new ProgressTickVm(this, n, Progress, IsDone || Progress == TaskProgress.Max))
+            .ToList();
     }
 
     public TaskItem Task { get; }
@@ -39,6 +45,9 @@ public sealed class TaskListItemVm : ViewModelBase
     public string FolderColor { get; }
     public string FolderName { get; }
     public TaskPriority Priority { get; }
+    public int Progress { get; }
+    public int SortOrder { get; }
+    public IReadOnlyList<ProgressTickVm> Ticks { get; }
 
     public Media.Brush FolderBrush
     {
@@ -52,11 +61,22 @@ public sealed class TaskListItemVm : ViewModelBase
 
     public string PriorityLabel => Priority switch
     {
-        TaskPriority.High => "High",
+        TaskPriority.High => "HIGH",
         TaskPriority.Medium => "Med",
         TaskPriority.Low => "Low",
         _ => ""
     };
+
+    public Media.Brush PriorityBrush => Priority switch
+    {
+        TaskPriority.High => new Media.SolidColorBrush(Media.Color.FromRgb(0xF8, 0x71, 0x71)),
+        TaskPriority.Medium => new Media.SolidColorBrush(Media.Color.FromRgb(0xFB, 0x92, 0x3C)),
+        TaskPriority.Low => new Media.SolidColorBrush(Media.Color.FromRgb(0xE5, 0xE5, 0xE5)),
+        _ => Media.Brushes.Transparent
+    };
+
+    public FontWeight PriorityWeight =>
+        Priority == TaskPriority.High ? FontWeights.Bold : FontWeights.Normal;
 
     private static string BuildSubtitle(TaskItem task, IReadOnlyList<Tag> allTags)
     {
@@ -98,5 +118,33 @@ public sealed class TaskListItemVm : ViewModelBase
         }
 
         return string.Join(" · ", parts);
+    }
+}
+
+public sealed class ProgressTickVm
+{
+    public ProgressTickVm(TaskListItemVm owner, int number, int progress, bool complete)
+    {
+        Owner = owner;
+        Number = number;
+        IsFilled = progress >= number;
+        IsComplete = complete && IsFilled;
+    }
+
+    public TaskListItemVm Owner { get; }
+    public int Number { get; }
+    public bool IsFilled { get; }
+    public bool IsComplete { get; }
+
+    public Media.Brush FillBrush
+    {
+        get
+        {
+            if (IsComplete)
+                return new Media.SolidColorBrush(Media.Color.FromRgb(0x34, 0xD3, 0x99));
+            if (IsFilled)
+                return new Media.SolidColorBrush(Media.Color.FromRgb(0xA7, 0x8B, 0xFA));
+            return new Media.SolidColorBrush(Media.Color.FromRgb(0x1F, 0x1F, 0x24));
+        }
     }
 }
