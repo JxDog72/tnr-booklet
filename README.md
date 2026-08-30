@@ -1,6 +1,8 @@
 # TNR-Booklet
 
-Local Windows app for todos, notes, and reminders. Nothing is uploaded. No account.
+**TNR** stands for **Todo / Notes / Reminders**.
+
+Local Windows app for those three things in one booklet. Nothing is uploaded. No account.
 
 Reminders still fire when the window is closed (Windows Task Scheduler). Optional Telegram and Discord messages are outbound only; tokens stay on this PC.
 
