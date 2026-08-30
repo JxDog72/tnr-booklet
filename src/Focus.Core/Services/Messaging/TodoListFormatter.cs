@@ -14,7 +14,7 @@ public static class TodoListFormatter
         ArgumentNullException.ThrowIfNull(folderNamesById);
 
         var sb = new StringBuilder();
-        sb.Append("FOCUS — ");
+        sb.Append("TNR-Booklet — ");
         sb.Append(title ?? "");
         sb.Append("\n\n");
 
@@ -48,7 +48,7 @@ public static class TodoListFormatter
     public static string FormatReminder(TaskItem task)
     {
         ArgumentNullException.ThrowIfNull(task);
-        return $"⏰ FOCUS reminder: {task.Title}";
+        return $"⏰ TNR-Booklet reminder: {task.Title}";
     }
 
     private static string ResolveFolderName(string? folderId, IReadOnlyDictionary<string, string> folderNamesById)

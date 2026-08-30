@@ -19,7 +19,7 @@
                 <TextBlock Text="Type" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                 <ComboBox ItemsSource="{Binding Kinds}"
                           SelectedItem="{Binding Kind}"
-                          Style="{DynamicResource FocusComboBox}"
+                          Style="{DynamicResource TypeComboBox}"
                           Margin="0,0,0,12"/>
 
                 <TextBlock Text="Title" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
@@ -43,13 +43,13 @@
                         <ComboBox ItemsSource="{Binding Folders}"
                                   SelectedItem="{Binding SelectedFolder}"
                                   DisplayMemberPath="Name"
-                                  Style="{DynamicResource FocusComboBox}"/>
+                                  Style="{DynamicResource FolderComboBox}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Priority" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                         <ComboBox ItemsSource="{Binding Priorities}"
                                   SelectedItem="{Binding Priority}"
-                                  Style="{DynamicResource FocusComboBox}"/>
+                                  Style="{DynamicResource PriorityComboBox}"/>
                     </StackPanel>
                 </Grid>
 

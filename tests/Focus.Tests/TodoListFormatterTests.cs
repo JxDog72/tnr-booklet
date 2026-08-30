@@ -34,7 +34,7 @@ public class TodoListFormatterTests
 
         var text = TodoListFormatter.FormatSummary("Today", tasks, folders);
 
-        text.Should().StartWith("FOCUS — Today");
+        text.Should().StartWith("TNR-Booklet — Today");
         text.Should().Contain("• [Inbox] Buy milk");
         text.Should().Contain("due");
         text.Should().Contain("reminder");
@@ -45,6 +45,6 @@ public class TodoListFormatterTests
     public void FormatReminder_includes_task_title()
     {
         var task = new TaskItem { Title = "Call dentist" };
-        TodoListFormatter.FormatReminder(task).Should().Be("⏰ FOCUS reminder: Call dentist");
+        TodoListFormatter.FormatReminder(task).Should().Be("⏰ TNR-Booklet reminder: Call dentist");
     }
 }

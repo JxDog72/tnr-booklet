@@ -73,4 +73,57 @@ public class TaskStoreTests : IDisposable
         list.Should().Contain(t => t.Title == "Today");
         list.Should().NotContain(t => t.Title == "Later");
     }
+
+    [Fact]
+    public void Progress_and_sort_order_roundtrip()
+    {
+        var folder = _store.GetFolders().First();
+        var task = new TaskItem
+        {
+            Title = "Partial",
+            FolderId = folder.Id,
+            Progress = 7,
+            SortOrder = 4
+        };
+        _store.UpsertTask(task);
+        var loaded = _store.GetTask(task.Id);
+        loaded.Should().NotBeNull();
+        loaded!.Progress.Should().Be(7);
+        loaded.SortOrder.Should().Be(4);
+    }
+
+    [Fact]
+    public void Query_orders_by_sort_order()
+    {
+        var folder = _store.GetFolders().First();
+        _store.UpsertTask(new TaskItem { Title = "Second", FolderId = folder.Id, SortOrder = 2 });
+        _store.UpsertTask(new TaskItem { Title = "First", FolderId = folder.Id, SortOrder = 1 });
+        var list = _store.QueryTasks(SmartView.All, folder.Id, null);
+        list.Select(t => t.Title).Should().Equal("First", "Second");
+    }
+
+    [Fact]
+    public void Reorder_visible_rewrites_sort_slots()
+    {
+        var folder = _store.GetFolders().First();
+        var a = new TaskItem { Title = "A", FolderId = folder.Id, SortOrder = 0 };
+        var b = new TaskItem { Title = "B", FolderId = folder.Id, SortOrder = 1 };
+        var c = new TaskItem { Title = "C", FolderId = folder.Id, SortOrder = 2 };
+        _store.UpsertTask(a);
+        _store.UpsertTask(b);
+        _store.UpsertTask(c);
+
+        _store.ReorderVisible(new[] { b.Id, a.Id, c.Id });
+        var list = _store.QueryTasks(SmartView.All, folder.Id, null);
+        list.Select(t => t.Title).Should().Equal("B", "A", "C");
+    }
+
+    [Fact]
+    public void NextSortOrder_increments()
+    {
+        var folder = _store.GetFolders().First();
+        _store.NextSortOrder().Should().Be(0);
+        _store.UpsertTask(new TaskItem { Title = "A", FolderId = folder.Id, SortOrder = 0 });
+        _store.NextSortOrder().Should().Be(1);
+    }
 }

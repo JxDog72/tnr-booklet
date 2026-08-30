@@ -22,5 +22,19 @@ public class ThemeCatalogTests
         var theme = ThemeCatalog.EnsureDefaults(null);
         theme.Id.Should().Be(ThemeCatalog.FocusDarkId);
         theme.Colors.Accent.Should().Be("#A78BFA");
+        theme.Colors.ComboTypeBg.Should().Be("#2A1F4A");
+        theme.Colors.ComboFolderFg.Should().Be("#D1FAE5");
+        theme.Colors.ComboPriorityBg.Should().Be("#2A2208");
+    }
+
+    [Fact]
+    public void EnsureDefaults_fills_empty_combo_colors()
+    {
+        var theme = new Focus.Core.Models.ThemeDefinition
+        {
+            Colors = new Focus.Core.Models.ThemeColors { ComboTypeBg = "" }
+        };
+        var filled = ThemeCatalog.EnsureDefaults(theme);
+        filled.Colors.ComboTypeBg.Should().Be("#2A1F4A");
     }
 }

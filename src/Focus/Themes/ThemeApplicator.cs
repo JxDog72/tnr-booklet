@@ -25,6 +25,12 @@ public static class ThemeApplicator
         (nameof(ThemeColors.Overdue), "OverdueBrush"),
         (nameof(ThemeColors.SelectionBg), "SelectionBgBrush"),
         (nameof(ThemeColors.SelectionFg), "SelectionFgBrush"),
+        (nameof(ThemeColors.ComboTypeBg), "ComboTypeBgBrush"),
+        (nameof(ThemeColors.ComboTypeFg), "ComboTypeFgBrush"),
+        (nameof(ThemeColors.ComboFolderBg), "ComboFolderBgBrush"),
+        (nameof(ThemeColors.ComboFolderFg), "ComboFolderFgBrush"),
+        (nameof(ThemeColors.ComboPriorityBg), "ComboPriorityBgBrush"),
+        (nameof(ThemeColors.ComboPriorityFg), "ComboPriorityFgBrush"),
     ];
 
     public static void Apply(ThemeColors colors)

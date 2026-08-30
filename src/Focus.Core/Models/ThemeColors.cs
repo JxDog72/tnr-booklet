@@ -19,6 +19,12 @@ public sealed class ThemeColors
     public string Overdue { get; set; } = "#F87171";
     public string SelectionBg { get; set; } = "#1A1528";
     public string SelectionFg { get; set; } = "#A78BFA";
+    public string ComboTypeBg { get; set; } = "#2A1F4A";
+    public string ComboTypeFg { get; set; } = "#E5E5E5";
+    public string ComboFolderBg { get; set; } = "#0F2A22";
+    public string ComboFolderFg { get; set; } = "#D1FAE5";
+    public string ComboPriorityBg { get; set; } = "#2A2208";
+    public string ComboPriorityFg { get; set; } = "#FDE68A";
 }
 
 public sealed class ThemeDefinition

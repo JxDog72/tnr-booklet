@@ -18,6 +18,12 @@
     <SolidColorBrush x:Key="OverdueBrush" Color="#F87171"/>
     <SolidColorBrush x:Key="SelectionBgBrush" Color="#1A1528"/>
     <SolidColorBrush x:Key="SelectionFgBrush" Color="#A78BFA"/>
+    <SolidColorBrush x:Key="ComboTypeBgBrush" Color="#2A1F4A"/>
+    <SolidColorBrush x:Key="ComboTypeFgBrush" Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="ComboFolderBgBrush" Color="#0F2A22"/>
+    <SolidColorBrush x:Key="ComboFolderFgBrush" Color="#D1FAE5"/>
+    <SolidColorBrush x:Key="ComboPriorityBgBrush" Color="#2A2208"/>
+    <SolidColorBrush x:Key="ComboPriorityFgBrush" Color="#FDE68A"/>
 
     <Style TargetType="Window">
         <Setter Property="Background" Value="{DynamicResource BgAppBrush}"/>
@@ -102,6 +108,30 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
     </Style>
 
+    <Style x:Key="FocusPasswordBox" TargetType="PasswordBox">
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceAltBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="PasswordChar" Value="●"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ScrollViewer x:Name="PART_ContentHost" Focusable="False"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FocusCheckBox" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Margin" Value="0,6"/>
@@ -161,7 +191,106 @@
         <Setter Property="Background" Value="{DynamicResource BgSurfaceAltBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                    <Setter Property="Padding" Value="8,6"/>
+                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border x:Name="bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="ToggleButton"
+                                      Focusable="False"
+                                      ClickMode="Press"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                        <Path HorizontalAlignment="Right"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0"
+                                              Data="M 0 0 L 6 5 L 12 0"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                              StrokeThickness="1.5"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter IsHitTestVisible="False"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <Popup x:Name="PART_Popup"
+                               Placement="Bottom"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Slide">
+                            <Border MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="0,4">
+                                <ScrollViewer>
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TypeComboBox" TargetType="ComboBox" BasedOn="{StaticResource FocusComboBox}">
+        <Setter Property="Background" Value="{DynamicResource ComboTypeBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ComboTypeFgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ComboTypeFgBrush}"/>
+    </Style>
+    <Style x:Key="FolderComboBox" TargetType="ComboBox" BasedOn="{StaticResource FocusComboBox}">
+        <Setter Property="Background" Value="{DynamicResource ComboFolderBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ComboFolderFgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ComboFolderFgBrush}"/>
+    </Style>
+    <Style x:Key="PriorityComboBox" TargetType="ComboBox" BasedOn="{StaticResource FocusComboBox}">
+        <Setter Property="Background" Value="{DynamicResource ComboPriorityBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ComboPriorityFgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ComboPriorityFgBrush}"/>
     </Style>
 
     <Style x:Key="SectionHeader" TargetType="TextBlock">

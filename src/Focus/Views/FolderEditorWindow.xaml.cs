@@ -26,7 +26,7 @@ public partial class FolderEditorWindow : Window
     {
         if (string.IsNullOrWhiteSpace(_vm.Name))
         {
-            System.Windows.MessageBox.Show("Folder name is required.", "FOCUS",
+            System.Windows.MessageBox.Show("Folder name is required.", "TNR-Booklet",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }

@@ -1,5 +1,5 @@
 @echo off
-title FOCUS
+title TNR-Booklet
 cd /d "%~dp0"
 
 set "EXE=%~dp0src\Focus\bin\Release\net9.0-windows10.0.19041.0\Focus.exe"
@@ -13,7 +13,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Building latest FOCUS...
+echo Building latest TNR-Booklet...
 dotnet build "%~dp0src\Focus\Focus.csproj" -c Release -v q
 if errorlevel 1 (
     echo Build failed.

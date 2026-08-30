@@ -10,7 +10,11 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>Focus</AssemblyName>
     <RootNamespace>Focus</RootNamespace>
-    <Product>FOCUS</Product>
+    <Product>TNR-Booklet</Product>
+    <Authors>JxDog72</Authors>
+    <Copyright>Copyright (c) 2026 JxDog72</Copyright>
+    <Description>TNR-Booklet — local-first Windows todos, notes, and reminders.</Description>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

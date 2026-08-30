@@ -8,6 +8,7 @@ publish/
 *.db
 *.db-shm
 *.db-wal
+*.db-journal
 
 .worktrees/
 

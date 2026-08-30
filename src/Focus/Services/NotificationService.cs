@@ -27,8 +27,8 @@ public sealed class NotificationService
 
     public void ShowToast(string title, string body)
     {
-        var safeTitle = string.IsNullOrWhiteSpace(title) ? "FOCUS" : title;
-        var safeBody = string.IsNullOrWhiteSpace(body) ? "FOCUS reminder" : body;
+        var safeTitle = string.IsNullOrWhiteSpace(title) ? "TNR-Booklet" : title;
+        var safeBody = string.IsNullOrWhiteSpace(body) ? "TNR-Booklet reminder" : body;
 
         try
         {

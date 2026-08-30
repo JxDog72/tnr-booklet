@@ -58,6 +58,31 @@ public class ExportImportServiceTests : IDisposable
     }
 
     [Fact]
+    public void Export_omits_messaging_secrets_and_does_not_mutate_source_settings()
+    {
+        var settings = _settings.Current;
+        settings.TelegramEnabled = true;
+        settings.TelegramBotToken = "secret-bot-token";
+        settings.TelegramChatId = "12345";
+        settings.DiscordEnabled = true;
+        settings.DiscordWebhookUrl = "https://discord.com/api/webhooks/secret";
+        settings.MessagingOnReminder = true;
+
+        var bundle = _exportImport.Export(_store, settings, _themes.GetAll());
+
+        bundle.Settings.Should().NotBeSameAs(settings);
+        bundle.Settings.TelegramEnabled.Should().BeTrue();
+        bundle.Settings.DiscordEnabled.Should().BeTrue();
+        bundle.Settings.TelegramChatId.Should().Be("12345");
+        bundle.Settings.MessagingOnReminder.Should().BeTrue();
+        bundle.Settings.TelegramBotToken.Should().BeNull();
+        bundle.Settings.DiscordWebhookUrl.Should().BeNull();
+
+        settings.TelegramBotToken.Should().Be("secret-bot-token");
+        settings.DiscordWebhookUrl.Should().Be("https://discord.com/api/webhooks/secret");
+    }
+
+    [Fact]
     public void ImportReplace_null_tasks_throws_InvalidDataException()
     {
         var bundle = new ExportBundle

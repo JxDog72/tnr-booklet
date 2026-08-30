@@ -24,7 +24,7 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
             folder.DeleteTask(name, exceptionOnNotExists: false);
 
             var td = ts.NewTask();
-            td.RegistrationInfo.Description = $"FOCUS reminder: {title}";
+            td.RegistrationInfo.Description = $"TNR-Booklet reminder: {title}";
             td.Settings.WakeToRun = wakeToRun;
             td.Settings.StartWhenAvailable = true;
             td.Settings.DisallowStartIfOnBatteries = false;
@@ -37,7 +37,7 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
         catch (Exception ex) when (ex is not InvalidOperationException and not ArgumentException)
         {
             throw new InvalidOperationException(
-                $"Failed to register FOCUS reminder for task '{taskId}': {ex.Message}", ex);
+                $"Failed to register TNR-Booklet reminder for task '{taskId}': {ex.Message}", ex);
         }
     }
 

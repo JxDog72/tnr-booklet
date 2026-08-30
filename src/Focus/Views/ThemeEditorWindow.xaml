@@ -25,7 +25,7 @@
             <TextBox Text="{Binding ThemeName, UpdateSourceTrigger=PropertyChanged}"
                      Style="{DynamicResource FocusTextBox}" Margin="0,0,0,12"/>
 
-            <TextBlock Text="Colors (hex)" Style="{DynamicResource SectionHeader}" Margin="0,0,0,8"/>
+            <TextBlock Text="Colors — click a swatch to pick" Style="{DynamicResource SectionHeader}" Margin="0,0,0,8"/>
             <ListBox ItemsSource="{Binding Colors}"
                      Background="Transparent"
                      BorderThickness="0"
@@ -35,15 +35,33 @@
                     <DataTemplate>
                         <Grid Margin="0,4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}"
+                            <Button Width="32" Height="32" Margin="0,0,10,0"
+                                    Cursor="Hand" Click="PickColor_Click"
+                                    ToolTip="Choose color">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                                                BorderThickness="1"/>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding DisplayName}"
                                        VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding Hex, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{DynamicResource FocusTextBox}"/>
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Hex}"
+                                       VerticalAlignment="Center"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="8,0,0,0"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

@@ -1,3 +1,5 @@
+Internal session notes — not user documentation.
+
 # FOCUS — Session Handoff
 
 **Last updated:** 2026-07-10  
@@ -20,9 +22,9 @@
 **Repo layout**
 
 ```
-todoReminders/
+tnr-booklet/
   Focus.sln
-  Run-FOCUS.bat              # double-click launcher
+  Run-TNR-Booklet.bat        # double-click launcher
   README.md
   HANDOFF.md                # this file
   docs/superpowers/specs/   # design spec
@@ -40,7 +42,7 @@ todoReminders/
 cd <repo-root>
 dotnet build src\Focus\Focus.csproj -c Release
 # or double-click:
-.\Run-FOCUS.bat
+.\Run-TNR-Booklet.bat
 ```
 
 Data lives **outside** the repo:
@@ -154,4 +156,4 @@ User (Windows) built FOCUS collaboratively via design → plan → implementatio
 
 They stopped for the night and asked for this handoff + GitHub push with a PII scrub.
 
-**Resume by:** reading this file + `README.md`, running `dotnet test`, launching `Run-FOCUS.bat`, then picking a “Suggested next sessions” item.
+**Resume by:** reading this file + `README.md`, running `dotnet test`, launching `Run-TNR-Booklet.bat`, then picking a “Suggested next sessions” item.
