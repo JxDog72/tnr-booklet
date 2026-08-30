@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>Focus</AssemblyName>
+    <AssemblyName>TNR-Booklet</AssemblyName>
     <RootNamespace>Focus</RootNamespace>
     <Product>TNR-Booklet</Product>
     <Authors>JxDog72</Authors>
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Focus.Core\Focus.Core.csproj" />
+    <ProjectReference Include="..\TnrBooklet.Core\TnrBooklet.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

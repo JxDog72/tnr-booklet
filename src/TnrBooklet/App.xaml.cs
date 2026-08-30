@@ -80,7 +80,7 @@ public partial class App : System.Windows.Application
             _showListenerThread = new Thread(ShowListenerLoop)
             {
                 IsBackground = true,
-                Name = "FOCUS.ShowListener"
+                Name = "TNR-Booklet.ShowListener"
             };
             _showListenerThread.Start();
         }

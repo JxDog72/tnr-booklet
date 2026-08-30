@@ -74,7 +74,7 @@ public sealed class SingleInstanceService : IDisposable
         return new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
     }
 
-    /// <summary>Best-effort activate an existing FOCUS main window.</summary>
+    /// <summary>Best-effort activate an existing TNR-Booklet main window.</summary>
     public static void TryActivateExisting()
     {
         try

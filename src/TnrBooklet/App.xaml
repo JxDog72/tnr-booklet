@@ -6,7 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Themes/FocusDark.xaml"/>
+                <ResourceDictionary Source="Themes/TnrDark.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>

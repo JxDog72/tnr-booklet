@@ -9,8 +9,8 @@ public static class ThemeCatalog
     public static ThemeDefinition CreateFocusDark() => new()
     {
         Id = FocusDarkId,
-        Name = "Focus Dark",
-        Colors = new ThemeColors() // defaults already Focus Dark
+        Name = "TNR Dark",
+        Colors = new ThemeColors()
     };
 
     public static ThemeDefinition EnsureDefaults(ThemeDefinition? theme)

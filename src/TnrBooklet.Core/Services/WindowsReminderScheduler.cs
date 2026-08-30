@@ -3,11 +3,12 @@ using Microsoft.Win32.TaskScheduler;
 namespace Focus.Core.Services;
 
 /// <summary>
-/// Registers one-shot reminder tasks under the Windows Task Scheduler folder \Focus.
+/// Registers one-shot reminder tasks under the Windows Task Scheduler folder \TNR-Booklet.
 /// </summary>
 public sealed class WindowsReminderScheduler : IReminderScheduler
 {
-    private const string FolderName = "Focus";
+    private const string FolderName = "TNR-Booklet";
+    private const string LegacyFolderName = "Focus";
 
     public void UpsertReminder(string taskId, string title, DateTime nextFireLocal, bool wakeToRun, string exePath)
     {
@@ -19,6 +20,7 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
         try
         {
             using var ts = new TaskService();
+            DeleteLegacyTask(ts, taskId);
             var folder = GetOrCreateFolder(ts);
             var name = TaskName(taskId);
             folder.DeleteTask(name, exceptionOnNotExists: false);
@@ -49,6 +51,7 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
         try
         {
             using var ts = new TaskService();
+            DeleteLegacyTask(ts, taskId);
             var folder = TryGetFolder(ts);
             folder?.DeleteTask(TaskName(taskId), exceptionOnNotExists: false);
         }
@@ -78,6 +81,21 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
     }
 
     private static string TaskName(string taskId) => $"remind-{taskId}";
+
+    private static void DeleteLegacyTask(TaskService ts, string taskId)
+    {
+        try
+        {
+            if (!ts.RootFolder.SubFolders.Exists(LegacyFolderName))
+                return;
+            ts.RootFolder.SubFolders[LegacyFolderName]
+                .DeleteTask(TaskName(taskId), exceptionOnNotExists: false);
+        }
+        catch
+        {
+            // Best-effort cleanup of the old scheduler folder.
+        }
+    }
 
     private static TaskFolder GetOrCreateFolder(TaskService ts)
     {

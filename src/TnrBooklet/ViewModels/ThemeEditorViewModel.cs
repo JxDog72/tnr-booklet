@@ -63,7 +63,7 @@ public sealed class ThemeEditorViewModel : ViewModelBase
 {
     private readonly AppServices _services;
     private ThemeDefinition _theme;
-    private string _themeName = "Focus Dark";
+    private string _themeName = "TNR Dark";
     private string _statusMessage = "";
 
     public ThemeEditorViewModel(AppServices services)
@@ -123,7 +123,7 @@ public sealed class ThemeEditorViewModel : ViewModelBase
             Colors.Add(f);
         }
         ApplyLive();
-        StatusMessage = "Reset to Focus Dark defaults (not saved yet).";
+        StatusMessage = "Reset to TNR Dark defaults (not saved yet).";
     }
 
     private ThemeColors ReadColors()
