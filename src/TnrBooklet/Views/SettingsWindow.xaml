@@ -73,9 +73,10 @@
                     <StackPanel>
                         <TextBlock Text="🗓  Windows Task Scheduler" FontWeight="SemiBold" FontSize="15"
                                    Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
-                        <TextBlock Text="Fire reminders even when TNR-Booklet is closed"
-                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,10"/>
-                        <CheckBox Content="Register scheduled reminders" IsChecked="{Binding TaskSchedulerEnabled}" Style="{DynamicResource FocusCheckBox}"/>
+                        <TextBlock Text="Yes — reminders still fire if the window is closed. Windows Task Scheduler starts TNR-Booklet at the set time (Library → TNR-Booklet)."
+                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,10"
+                                   TextWrapping="Wrap"/>
+                        <CheckBox Content="Remind when TNR-Booklet is closed (Task Scheduler)" IsChecked="{Binding TaskSchedulerEnabled}" Style="{DynamicResource FocusCheckBox}"/>
                         <CheckBox Content="Wake computer to run reminder" IsChecked="{Binding WakeToRun}" Style="{DynamicResource FocusCheckBox}"/>
                     </StackPanel>
                 </Border>

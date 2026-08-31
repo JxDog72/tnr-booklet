@@ -465,7 +465,7 @@ public sealed class MainViewModel : ViewModelBase
         task.TagIds = resolved;
     }
 
-    private static string StatusAfterSave(TaskItem task, bool created)
+    private string StatusAfterSave(TaskItem task, bool created)
     {
         var verb = created
             ? (task.Kind == ItemKind.Note ? "Created note" : "Created todo")
@@ -473,18 +473,31 @@ public sealed class MainViewModel : ViewModelBase
         if (task.Kind == ItemKind.Note)
             return $"{verb} “{task.Title}”";
         if (task.ReminderAtLocal is { } when)
-            return $"{verb} “{task.Title}” · reminder {when:g}";
+        {
+            var clock = when.ToString("HH:mm");
+            if (_lastSchedulerOk)
+                return $"{verb} “{task.Title}” · reminder {clock} (24-hour) · also if the app is closed";
+            if (!_services.Settings.Current.TaskSchedulerEnabled)
+                return $"{verb} “{task.Title}” · reminder {clock} (while the app is open — enable Task Scheduler in Settings for closed-app alerts)";
+            return $"{verb} “{task.Title}” · reminder {clock} (in-app; Windows did not register a scheduled task)";
+        }
         return $"{verb} “{task.Title}”";
     }
+
+    private bool _lastSchedulerOk;
 
     private void PersistAndSync(TaskItem task)
     {
         task.UpdatedAtUtc = DateTime.UtcNow;
         _services.Store.UpsertTask(task);
+        _lastSchedulerOk = false;
         var exe = _services.GetExePath() ?? "";
         try
         {
             _services.CreateSchedulerSync().SyncTask(task, exe);
+            _lastSchedulerOk = task.ReminderAtLocal is { } when
+                && when > DateTime.Now
+                && _services.ReminderScheduler.Exists(task.Id);
         }
         catch (Exception ex)
         {
