@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Focus.ViewModels;
@@ -54,4 +55,77 @@ public partial class SettingsWindow : Window
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void OpenDataFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _vm.OpenDataFolder();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show("Could not open folder:\n" + ex.Message, "TNR-Booklet",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ChangeDataFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Choose where TNR-Booklet saves todos, notes, and settings",
+            Multiselect = false
+        };
+        try
+        {
+            dlg.InitialDirectory = _vm.DataFolderPath;
+        }
+        catch
+        {
+            // Ignore if the current path is gone.
+        }
+
+        if (dlg.ShowDialog(this) != true)
+            return;
+
+        var folder = dlg.FolderName;
+        if (string.IsNullOrWhiteSpace(folder))
+            return;
+
+        if (_vm.RelocateTo(folder))
+            RestartApp();
+    }
+
+    private void DefaultDataFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm.ResetToDefault())
+            RestartApp();
+    }
+
+    private static void RestartApp()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath;
+            if (!string.IsNullOrWhiteSpace(exe) && File.Exists(exe))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = exe,
+                    UseShellExecute = true
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                "Data folder updated, but the app could not restart automatically.\nClose and open TNR-Booklet.\n\n" + ex.Message,
+                "TNR-Booklet",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        System.Windows.Application.Current?.Shutdown();
+    }
 }

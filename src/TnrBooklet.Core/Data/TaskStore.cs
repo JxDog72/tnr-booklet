@@ -683,9 +683,35 @@ public sealed class TaskStore : IDisposable
         return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
     }
 
+    public void BackupTo(string destDbPath)
+    {
+        var directory = Path.GetDirectoryName(destDbPath);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+
+        using var dest = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = destDbPath,
+            ForeignKeys = true
+        }.ToString());
+        dest.Open();
+        _connection.BackupDatabase(dest);
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
+        try
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            // Best-effort so the .db file can be copied after close.
+        }
+
         _connection.Dispose();
         _disposed = true;
         GC.SuppressFinalize(this);
