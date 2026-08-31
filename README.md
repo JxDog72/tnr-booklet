@@ -4,7 +4,7 @@
 
 Local Windows app for those three things in one booklet. Nothing is uploaded. No account.
 
-![TNR-Booklet main window](screenshots/mainView.png)
+![TNR-Booklet main window](https://raw.githubusercontent.com/JxDog72/tnr-booklet/screenshots/mainView.png)
 
 Reminders still fire when the window is closed (Windows Task Scheduler). Optional Telegram and Discord messages go out only; tokens stay on this PC.
 
