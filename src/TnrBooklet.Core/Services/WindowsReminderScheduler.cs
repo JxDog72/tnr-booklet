@@ -27,14 +27,21 @@ public sealed class WindowsReminderScheduler : IReminderScheduler
 
             var td = ts.NewTask();
             td.RegistrationInfo.Description = $"TNR-Booklet reminder: {title}";
+            td.Principal.LogonType = TaskLogonType.InteractiveToken;
+            td.Principal.RunLevel = TaskRunLevel.LUA;
             td.Settings.WakeToRun = wakeToRun;
             td.Settings.StartWhenAvailable = true;
             td.Settings.DisallowStartIfOnBatteries = false;
             td.Settings.StopIfGoingOnBatteries = false;
+            td.Settings.AllowDemandStart = true;
+            td.Settings.ExecutionTimeLimit = TimeSpan.FromMinutes(5);
             td.Settings.Enabled = true;
-            td.Triggers.Add(new TimeTrigger(nextFireLocal));
+            var start = DateTime.SpecifyKind(nextFireLocal, DateTimeKind.Local);
+            if (start.Second == 0 && start.Millisecond == 0)
+                start = start.AddSeconds(1);
+            td.Triggers.Add(new TimeTrigger(start));
             td.Actions.Add(new ExecAction(exePath, $"--remind {taskId}", Path.GetDirectoryName(exePath)));
-            folder.RegisterTaskDefinition(name, td);
+            folder.RegisterTaskDefinition(name, td, TaskCreation.CreateOrUpdate, null, null, TaskLogonType.InteractiveToken);
         }
         catch (Exception ex) when (ex is not InvalidOperationException and not ArgumentException)
         {

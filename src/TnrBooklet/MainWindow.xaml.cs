@@ -53,6 +53,12 @@ public partial class MainWindow : Window
         _tray.SetVisible(_services.Settings.Current.TrayEnabled);
     }
 
+    public void RefreshAfterReminder()
+    {
+        try { _vm.Refresh(); }
+        catch { /* ignore */ }
+    }
+
     private void ShowFromTray()
     {
         Show();

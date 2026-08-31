@@ -28,11 +28,10 @@ public sealed class SchedulerSyncService
             return;
         }
 
-        DateTime? when = task.Recurrence.IsRecurring
-            ? task.Recurrence.NextFireAtLocal
-            : task.ReminderAtLocal;
+        DateTime? when = task.ReminderAtLocal
+            ?? (task.Recurrence.IsRecurring ? task.Recurrence.NextFireAtLocal : null);
 
-        if (task.Status == FocusTaskStatus.Done || when is null || when <= DateTime.Now.AddMinutes(-1))
+        if (task.Status == FocusTaskStatus.Done || when is null || when <= DateTime.Now)
         {
             _scheduler.RemoveReminder(task.Id);
             return;

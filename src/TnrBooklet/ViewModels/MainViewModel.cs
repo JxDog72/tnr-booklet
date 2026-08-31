@@ -331,9 +331,7 @@ public sealed class MainViewModel : ViewModelBase
             PersistAndSync(task);
             RebuildSidebar();
             RefreshTasksOnly();
-            StatusText = task.Kind == ItemKind.Note
-                ? $"Created note “{task.Title}”"
-                : $"Created todo “{task.Title}”";
+            StatusText = StatusAfterSave(task, created: true);
         }
     }
 
@@ -357,7 +355,7 @@ public sealed class MainViewModel : ViewModelBase
             PersistAndSync(task);
             RebuildSidebar();
             RefreshTasksOnly();
-            StatusText = $"Updated “{task.Title}”";
+            StatusText = StatusAfterSave(task, created: false);
         }
     }
 
@@ -465,6 +463,18 @@ public sealed class MainViewModel : ViewModelBase
             }
         }
         task.TagIds = resolved;
+    }
+
+    private static string StatusAfterSave(TaskItem task, bool created)
+    {
+        var verb = created
+            ? (task.Kind == ItemKind.Note ? "Created note" : "Created todo")
+            : "Updated";
+        if (task.Kind == ItemKind.Note)
+            return $"{verb} “{task.Title}”";
+        if (task.ReminderAtLocal is { } when)
+            return $"{verb} “{task.Title}” · reminder {when:g}";
+        return $"{verb} “{task.Title}”";
     }
 
     private void PersistAndSync(TaskItem task)
