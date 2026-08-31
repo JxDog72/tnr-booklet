@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
+using Focus.Core.Data;
+using Focus.Core.Models;
 using Focus.Core.Recurrence;
 using Focus.Services;
 using Focus.Themes;
@@ -12,6 +14,8 @@ public partial class App : System.Windows.Application
     private SingleInstanceService? _singleInstance;
     private EventWaitHandle? _showListener;
     private Thread? _showListenerThread;
+    private DispatcherTimer? _reminderTimer;
+    private bool _pollingReminders;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -24,6 +28,7 @@ public partial class App : System.Windows.Application
 
         try
         {
+            NotificationService.EnsureAppUserModelId();
             StartCore(e.Args ?? Array.Empty<string>());
         }
         catch (Exception ex)
@@ -94,6 +99,54 @@ public partial class App : System.Windows.Application
         main.Show();
         main.Activate();
         main.WindowState = WindowState.Normal;
+        StartReminderPoller();
+    }
+
+    private void StartReminderPoller()
+    {
+        _reminderTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        _reminderTimer.Tick += PollReminders;
+        _reminderTimer.Start();
+        PollReminders(this, EventArgs.Empty);
+    }
+
+    private async void PollReminders(object? sender, EventArgs e)
+    {
+        if (_pollingReminders || _services is null)
+            return;
+        _pollingReminders = true;
+        try
+        {
+            TaskItem? due = null;
+            foreach (var task in _services.Store.QueryTasks(SmartView.All, null, null))
+            {
+                if (task.Kind == ItemKind.Note || task.Status != FocusTaskStatus.Open)
+                    continue;
+                var when = task.ReminderAtLocal
+                    ?? (task.Recurrence.IsRecurring ? task.Recurrence.NextFireAtLocal : null);
+                if (when is null || when.Value > DateTime.Now)
+                    continue;
+                if (WasRecentlyFired(_services.DataDir, task.Id))
+                    continue;
+                due = task;
+                break;
+            }
+
+            if (due is null)
+                return;
+
+            await HandleRemindAsync(due.Id);
+            if (MainWindow is MainWindow mw)
+                mw.RefreshAfterReminder();
+        }
+        catch
+        {
+            // Never crash the UI loop over a reminder.
+        }
+        finally
+        {
+            _pollingReminders = false;
+        }
     }
 
     private void ShowListenerLoop()
@@ -157,7 +210,7 @@ public partial class App : System.Windows.Application
 
         var settings = _services.Settings.Current;
         var notify = new NotificationService();
-        notify.Notify(task, settings, focusMainWindow: null);
+        notify.Notify(task, settings, NotificationService.FocusMainWindow);
 
         ReminderAdvance.OnFired(task, DateTime.Now);
         _services.Store.UpsertTask(task);
@@ -269,6 +322,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        try { _reminderTimer?.Stop(); } catch { /* ignore */ }
         try { _showListener?.Dispose(); } catch { /* ignore */ }
         _singleInstance?.Dispose();
         _services?.Dispose();

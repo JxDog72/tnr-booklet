@@ -389,33 +389,25 @@ public sealed class TaskStore : IDisposable
                     """;
                 break;
             case SmartView.Upcoming:
-                // Open tasks whose earliest relevant date is after end of today
+                // Open items still in the future (later today or another day).
                 sql += """
                      AND t.status = $open
                      AND (
-                       SELECT MIN(d) FROM (
-                         SELECT t.due_at_local AS d WHERE t.due_at_local IS NOT NULL
-                         UNION ALL
-                         SELECT t.reminder_at_local WHERE t.reminder_at_local IS NOT NULL
-                         UNION ALL
-                         SELECT t.rec_next_fire_local WHERE t.rec_next_fire_local IS NOT NULL
-                       )
-                     ) > $todayEnd
+                       t.due_at_local > $now
+                       OR t.reminder_at_local > $now
+                       OR t.rec_next_fire_local > $now
+                     )
                     """;
                 break;
             case SmartView.Overdue:
-                // Open tasks whose earliest relevant date is before start of today
+                // Open items whose due/reminder/next fire is already in the past.
                 sql += """
                      AND t.status = $open
                      AND (
-                       SELECT MIN(d) FROM (
-                         SELECT t.due_at_local AS d WHERE t.due_at_local IS NOT NULL
-                         UNION ALL
-                         SELECT t.reminder_at_local WHERE t.reminder_at_local IS NOT NULL
-                         UNION ALL
-                         SELECT t.rec_next_fire_local WHERE t.rec_next_fire_local IS NOT NULL
-                       )
-                     ) < $todayStart
+                       (t.due_at_local IS NOT NULL AND t.due_at_local < $now)
+                       OR (t.reminder_at_local IS NOT NULL AND t.reminder_at_local < $now)
+                       OR (t.rec_next_fire_local IS NOT NULL AND t.rec_next_fire_local < $now)
+                     )
                     """;
                 break;
             case SmartView.Completed:
@@ -438,6 +430,7 @@ public sealed class TaskStore : IDisposable
         cmd.Parameters.AddWithValue("$todayDate", todayDate);
         cmd.Parameters.AddWithValue("$todayStart", todayStart);
         cmd.Parameters.AddWithValue("$todayEnd", todayEnd);
+        cmd.Parameters.AddWithValue("$now", DateTime.Now.ToString(LocalDateTimeFormat));
         if (!string.IsNullOrEmpty(folderId))
             cmd.Parameters.AddWithValue("$folderId", folderId);
         if (!string.IsNullOrEmpty(tagId))

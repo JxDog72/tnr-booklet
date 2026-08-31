@@ -67,7 +67,7 @@
                     </Grid>
 
                     <TextBlock Text="Reminder (optional timed alert)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,12">
+                    <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
@@ -75,8 +75,12 @@
                         </Grid.ColumnDefinitions>
                         <DatePicker SelectedDate="{Binding ReminderDate}"/>
                         <TextBox Grid.Column="2" Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
+                                 Style="{DynamicResource FocusTextBox}"
+                                 ToolTip="Time as HH:mm (24-hour). Empty + today = about one minute from now; empty + another day = 09:00."/>
                     </Grid>
+                    <TextBlock Text="Time is HH:mm. Leave it blank for today and the alert is about one minute from Save."
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,12"
+                               TextWrapping="Wrap"/>
 
                     <TextBlock Text="Recurrence" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                     <Grid Margin="0,0,0,8">

@@ -213,8 +213,8 @@ public sealed class TaskEditorViewModel : ViewModelBase
 
         if (Kind == ItemKind.Todo)
         {
-            due = CombineDateTime(DueDate, DueTimeText);
-            reminder = CombineDateTime(ReminderDate, ReminderTimeText);
+            due = CombineDateTime(DueDate, DueTimeText, defaultIfTimeMissing: false);
+            reminder = CombineReminder(ReminderDate, ReminderTimeText);
             if (!TryParseTime(TimeOfDayText, out var timeOfDay))
                 timeOfDay = new TimeOnly(9, 0);
 
@@ -284,13 +284,37 @@ public sealed class TaskEditorViewModel : ViewModelBase
         return ids;
     }
 
-    private static DateTime? CombineDateTime(DateTime? date, string? timeText)
+    /// <summary>
+    /// Date + HH:mm. If the date is set and time is blank: later today → about one
+    /// minute from now; other days → 09:00. Midnight used to skip the scheduler.
+    /// </summary>
+    private static DateTime? CombineReminder(DateTime? date, string? timeText)
     {
         if (date is null)
             return null;
         if (TryParseTime(timeText, out var t))
-            return date.Value.Date + t.ToTimeSpan();
-        return date.Value.Date;
+            return DateTime.SpecifyKind(date.Value.Date + t.ToTimeSpan(), DateTimeKind.Local);
+
+        var day = date.Value.Date;
+        if (day > DateTime.Today)
+            return DateTime.SpecifyKind(day.AddHours(9), DateTimeKind.Local);
+
+        var soon = DateTime.Now.AddMinutes(1);
+        soon = new DateTime(soon.Year, soon.Month, soon.Day, soon.Hour, soon.Minute, 0, DateTimeKind.Local);
+        if (soon.Date != DateTime.Today)
+            soon = DateTime.Today.AddDays(1).AddHours(9);
+        return soon;
+    }
+
+    private static DateTime? CombineDateTime(DateTime? date, string? timeText, bool defaultIfTimeMissing)
+    {
+        if (date is null)
+            return null;
+        if (TryParseTime(timeText, out var t))
+            return DateTime.SpecifyKind(date.Value.Date + t.ToTimeSpan(), DateTimeKind.Local);
+        if (!defaultIfTimeMissing)
+            return DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Local);
+        return DateTime.SpecifyKind(date.Value.Date + new TimeSpan(9, 0, 0), DateTimeKind.Local);
     }
 
     private static bool TryParseTime(string? text, out TimeOnly time)
