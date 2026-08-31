@@ -12,6 +12,9 @@ publish/
 
 .worktrees/
 
+# Promo shots live on the `screenshots` branch for the GitHub README only.
+/screenshots/
+
 # Local secrets / machine data (never commit)
 settings.json
 themes.json
