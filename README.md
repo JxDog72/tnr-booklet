@@ -39,7 +39,7 @@ Then run `publish\TNR-Booklet.exe`.
 - Folders and tags (Work / Personal seeds plus your own)
 - Todos and notes (notes skip due dates and reminders). List badges: **TODO** (amber), **NOTE** (teal), **REMINDER** (rose) when a todo has a timed alert
 - Views: All, Today, Upcoming, Overdue, Completed
-- One-shot and recurring reminders
+- One-shot and recurring reminders (24-hour time, e.g. 09:05 or 21:30). While the app is open it watches the clock; when it is closed, Windows Task Scheduler (`Library → TNR-Booklet`) starts it at that time (24-hour time, e.g. 09:05 or 21:30). While the app is open it polls the clock; when it is closed, Windows Task Scheduler (`Library → TNR-Booklet`) starts it at that time
 - Toast, sound, tray, close-to-tray
 - Theme editor
 - JSON export / import (bot tokens and webhook URLs are not written into exports)

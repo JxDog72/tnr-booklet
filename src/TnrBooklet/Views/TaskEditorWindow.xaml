@@ -59,11 +59,19 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="140"/>
                         </Grid.ColumnDefinitions>
-                        <DatePicker SelectedDate="{Binding DueDate}"/>
-                        <TextBox Grid.Column="2" Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{DynamicResource FocusTextBox}" ToolTip="HH:mm"/>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Date" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,4"/>
+                        <DatePicker Grid.Row="1" SelectedDate="{Binding DueDate}"/>
+                        <TextBlock Grid.Column="2" Text="Time (24-hour)" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,4"/>
+                        <TextBox Grid.Row="1" Grid.Column="2"
+                                 Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{DynamicResource FocusTextBox}"
+                                 ToolTip="24-hour time. Example: 09:05 or 21:30"/>
                     </Grid>
 
                     <TextBlock Text="Reminder (optional timed alert)" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
@@ -71,14 +79,23 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="140"/>
                         </Grid.ColumnDefinitions>
-                        <DatePicker SelectedDate="{Binding ReminderDate}"/>
-                        <TextBox Grid.Column="2" Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}"
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Date" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,4"/>
+                        <DatePicker Grid.Row="1" SelectedDate="{Binding ReminderDate}"/>
+                        <TextBlock Grid.Column="2" Text="Time (24-hour, e.g. 21:30)"
+                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,4"
+                                   TextWrapping="Wrap"/>
+                        <TextBox Grid.Row="1" Grid.Column="2"
+                                 Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{DynamicResource FocusTextBox}"
-                                 ToolTip="Time as HH:mm (24-hour). Empty + today = about one minute from now; empty + another day = 09:00."/>
+                                 ToolTip="Military / 24-hour time only. 09:05 = 9:05 AM. 21:30 = 9:30 PM."/>
                     </Grid>
-                    <TextBlock Text="Time is HH:mm. Leave it blank for today and the alert is about one minute from Save."
+                    <TextBlock Text="Type 24-hour time in the right box (09:05 or 21:30), not AM/PM. The alert uses that clock time. If TNR-Booklet is closed, Windows Task Scheduler still launches it."
                                Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,0,0,12"
                                TextWrapping="Wrap"/>
 
@@ -95,7 +112,7 @@
                                   SelectedItem="{Binding RecurrenceKind}"
                                   Style="{DynamicResource FocusComboBox}"/>
                         <TextBox Grid.Column="2" Text="{Binding TimeOfDayText, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{DynamicResource FocusTextBox}" ToolTip="Time of day HH:mm"/>
+                                 Style="{DynamicResource FocusTextBox}" ToolTip="Recurrence time of day, 24-hour (HH:mm)"/>
                         <TextBox Grid.Column="4" Text="{Binding IntervalN, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{DynamicResource FocusTextBox}" ToolTip="Interval N (EveryNDays)"/>
                     </Grid>

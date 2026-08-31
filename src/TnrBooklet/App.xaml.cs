@@ -104,7 +104,7 @@ public partial class App : System.Windows.Application
 
     private void StartReminderPoller()
     {
-        _reminderTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        _reminderTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _reminderTimer.Tick += PollReminders;
         _reminderTimer.Start();
         PollReminders(this, EventArgs.Empty);

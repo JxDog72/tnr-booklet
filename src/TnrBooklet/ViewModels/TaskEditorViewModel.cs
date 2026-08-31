@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Focus.Core.Models;
 using Focus.Core.Recurrence;
 
@@ -213,8 +215,18 @@ public sealed class TaskEditorViewModel : ViewModelBase
 
         if (Kind == ItemKind.Todo)
         {
-            due = CombineDateTime(DueDate, DueTimeText, defaultIfTimeMissing: false);
-            reminder = CombineReminder(ReminderDate, ReminderTimeText);
+            if (!TryCombineDue(DueDate, DueTimeText, out due, out var dueError))
+            {
+                ValidationError = dueError;
+                return false;
+            }
+
+            if (!TryCombineReminder(ReminderDate, ReminderTimeText, out reminder, out var remError))
+            {
+                ValidationError = remError;
+                return false;
+            }
+
             if (!TryParseTime(TimeOfDayText, out var timeOfDay))
                 timeOfDay = new TimeOnly(9, 0);
 
@@ -284,37 +296,73 @@ public sealed class TaskEditorViewModel : ViewModelBase
         return ids;
     }
 
-    /// <summary>
-    /// Date + HH:mm. If the date is set and time is blank: later today → about one
-    /// minute from now; other days → 09:00. Midnight used to skip the scheduler.
-    /// </summary>
-    private static DateTime? CombineReminder(DateTime? date, string? timeText)
+    private static bool TryCombineDue(
+        DateTime? date,
+        string? timeText,
+        out DateTime? due,
+        out string? error)
     {
+        due = null;
+        error = null;
+        if (date is null && string.IsNullOrWhiteSpace(timeText))
+            return true;
         if (date is null)
-            return null;
-        if (TryParseTime(timeText, out var t))
-            return DateTime.SpecifyKind(date.Value.Date + t.ToTimeSpan(), DateTimeKind.Local);
+        {
+            error = "Pick a due date, or clear the due time.";
+            return false;
+        }
 
-        var day = date.Value.Date;
-        if (day > DateTime.Today)
-            return DateTime.SpecifyKind(day.AddHours(9), DateTimeKind.Local);
+        if (string.IsNullOrWhiteSpace(timeText))
+        {
+            due = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Local);
+            return true;
+        }
 
-        var soon = DateTime.Now.AddMinutes(1);
-        soon = new DateTime(soon.Year, soon.Month, soon.Day, soon.Hour, soon.Minute, 0, DateTimeKind.Local);
-        if (soon.Date != DateTime.Today)
-            soon = DateTime.Today.AddDays(1).AddHours(9);
-        return soon;
+        if (!TryParseTime(timeText, out var t))
+        {
+            error = "Due time must be 24-hour, like 09:05 or 21:30.";
+            return false;
+        }
+
+        due = DateTime.SpecifyKind(date.Value.Date + t.ToTimeSpan(), DateTimeKind.Local);
+        return true;
     }
 
-    private static DateTime? CombineDateTime(DateTime? date, string? timeText, bool defaultIfTimeMissing)
+    private static bool TryCombineReminder(
+        DateTime? date,
+        string? timeText,
+        out DateTime? reminder,
+        out string? error)
     {
-        if (date is null)
-            return null;
-        if (TryParseTime(timeText, out var t))
-            return DateTime.SpecifyKind(date.Value.Date + t.ToTimeSpan(), DateTimeKind.Local);
-        if (!defaultIfTimeMissing)
-            return DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Local);
-        return DateTime.SpecifyKind(date.Value.Date + new TimeSpan(9, 0, 0), DateTimeKind.Local);
+        reminder = null;
+        error = null;
+        var hasDate = date is not null;
+        var hasTime = !string.IsNullOrWhiteSpace(timeText);
+        if (!hasDate && !hasTime)
+            return true;
+
+        if (!hasTime)
+        {
+            error = "Enter a reminder time in 24-hour format (example: 09:05 or 21:30).";
+            return false;
+        }
+
+        if (!TryParseTime(timeText, out var t))
+        {
+            error = "Reminder time must be 24-hour, like 09:05 or 21:30 (not 9:05 PM).";
+            return false;
+        }
+
+        var day = (date ?? DateTime.Today).Date;
+        reminder = DateTime.SpecifyKind(day + t.ToTimeSpan(), DateTimeKind.Local);
+        if (reminder.Value < DateTime.Now.AddSeconds(-15))
+        {
+            error = $"Reminder {reminder.Value:t} already passed. Use a later 24-hour time or a future date.";
+            reminder = null;
+            return false;
+        }
+
+        return true;
     }
 
     private static bool TryParseTime(string? text, out TimeOnly time)
@@ -322,6 +370,31 @@ public sealed class TaskEditorViewModel : ViewModelBase
         time = default;
         if (string.IsNullOrWhiteSpace(text))
             return false;
-        return TimeOnly.TryParse(text.Trim(), out time);
+
+        var s = text.Trim();
+        var styles = DateTimeStyles.None;
+        if (TimeOnly.TryParse(s, CultureInfo.InvariantCulture, styles, out time) && !LooksLike12Hour(s))
+            return true;
+        if (TimeOnly.TryParse(s, CultureInfo.CurrentCulture, styles, out time) && !LooksLike12Hour(s))
+            return true;
+
+        s = s.Replace(".", ":").Replace(" ", "");
+        if (Regex.IsMatch(s, @"^\d{3,4}$"))
+        {
+            if (s.Length == 3)
+                s = "0" + s;
+            return TimeOnly.TryParseExact(s, "HHmm", CultureInfo.InvariantCulture, styles, out time);
+        }
+
+        return TimeOnly.TryParseExact(
+            s,
+            ["H:mm", "HH:mm", "H:mm:ss", "HH:mm:ss"],
+            CultureInfo.InvariantCulture,
+            styles,
+            out time);
     }
+
+    private static bool LooksLike12Hour(string text) =>
+        text.Contains("AM", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("PM", StringComparison.OrdinalIgnoreCase);
 }
