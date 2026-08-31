@@ -37,7 +37,7 @@ Then run `publish\TNR-Booklet.exe`.
 ## What it does
 
 - Folders and tags (Work / Personal seeds plus your own)
-- Todos and notes (notes skip due dates and reminders)
+- Todos and notes (notes skip due dates and reminders). List badges: **TODO** (amber), **NOTE** (teal), **REMINDER** (rose) when a todo has a timed alert
 - Views: All, Today, Upcoming, Overdue, Completed
 - One-shot and recurring reminders
 - Toast, sound, tray, close-to-tray
@@ -49,13 +49,17 @@ Then run `publish\TNR-Booklet.exe`.
 
 ## Data (this PC only)
 
+Default folder:
+
 | Path | Purpose |
 |------|---------|
 | `%LocalAppData%\TnrBooklet\tnr-booklet.db` | Tasks, folders, tags |
 | `%LocalAppData%\TnrBooklet\settings.json` | Settings and local messaging secrets |
 | `%LocalAppData%\TnrBooklet\themes.json` | Themes |
 
-If you previously used an older install, existing data under `%LocalAppData%\Focus\` is moved into this folder on first launch.
+**Settings → Data folder** shows the live path, lets you open it, and lets you pick a different folder (for example a USB drive or another disk). The chosen path is stored in `%LocalAppData%\TnrBooklet\data-location.txt`; the database and settings files then live in that folder.
+
+If you previously used an older install, existing data under `%LocalAppData%\Focus\` is moved into the default folder on first launch.
 
 Scheduled reminders live in **Task Scheduler Library → TNR-Booklet**.
 

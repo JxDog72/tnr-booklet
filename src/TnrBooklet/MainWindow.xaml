@@ -323,12 +323,12 @@
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                    <Border Background="{DynamicResource BgSurfaceAltBrush}"
+                                    <Border Background="{Binding KindBackground}"
                                             CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
                                             VerticalAlignment="Center">
                                         <TextBlock Text="{Binding KindLabel}"
                                                    FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource AccentBrush}"/>
+                                                   Foreground="{Binding KindBrush}"/>
                                     </Border>
                                     <TextBlock Text="{Binding PriorityLabel}"
                                                Foreground="{Binding PriorityBrush}"

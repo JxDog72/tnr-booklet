@@ -17,7 +17,7 @@ public sealed class AppServices : IDisposable
 
     public AppServices(string? dataDir = null)
     {
-        DataDir = dataDir ?? DatabasePaths.GetDefaultDataDirectory();
+        DataDir = dataDir ?? DatabasePaths.GetActiveDataDirectory();
         Directory.CreateDirectory(DataDir);
 
         Store = new TaskStore(DatabasePaths.GetDbPath(DataDir));
@@ -45,11 +45,17 @@ public sealed class AppServices : IDisposable
         Environment.ProcessPath
         ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
 
-    public void Dispose()
+    /// <summary>Checkpoint and close SQLite so the data files can be copied.</summary>
+    public void CloseStore()
     {
         if (_disposed) return;
         Store.Dispose();
         _disposed = true;
+    }
+
+    public void Dispose()
+    {
+        CloseStore();
         GC.SuppressFinalize(this);
     }
 }

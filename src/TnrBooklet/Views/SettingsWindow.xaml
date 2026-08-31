@@ -24,6 +24,32 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                       CanContentScroll="False" PanningMode="VerticalOnly">
             <StackPanel>
+                <!-- Data folder -->
+                <Border Style="{DynamicResource SettingsCard}">
+                    <StackPanel>
+                        <TextBlock Text="📁  Data folder" FontWeight="SemiBold" FontSize="15"
+                                   Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Todos, notes, settings, and themes on this PC"
+                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,10"/>
+                        <TextBox Text="{Binding DataFolderPath, Mode=OneWay}"
+                                 Style="{DynamicResource FocusTextBox}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 FontFamily="Consolas"/>
+                        <TextBlock Text="{Binding DataFolderHint}"
+                                   Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,6,0,8"
+                                   TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Change folder…" Style="{DynamicResource FocusButton}"
+                                    Padding="12,6" Margin="0,0,8,0" Click="ChangeDataFolder_Click"/>
+                            <Button Content="Open folder" Style="{DynamicResource FocusButton}"
+                                    Padding="12,6" Margin="0,0,8,0" Click="OpenDataFolder_Click"/>
+                            <Button Content="Use default" Style="{DynamicResource FocusButton}"
+                                    Padding="12,6" Click="DefaultDataFolder_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <!-- Notifications -->
                 <Border Style="{DynamicResource SettingsCard}">
                     <StackPanel>
