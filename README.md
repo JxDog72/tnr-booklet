@@ -17,7 +17,7 @@ Reminders still fire when the window is closed (Windows Task Scheduler). Optiona
 1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (or the .NET 9 desktop runtime if you already have a built exe).
 2. Double-click `Run-TNR-Booklet.bat`.
 
-That builds a Release copy if the SDK is present, then launches TNR-Booklet.
+That builds a Release copy if the SDK is present, then launches TNR-Booklet. After a successful build it also drops a **tnr-booklet.exe** shortcut on your Desktop and in the Start Menu so Windows Search finds it when you type `tnr-booklet` (same idea as the sysmonbar desktop shortcut).
 
 From a terminal in this folder:
 
@@ -41,7 +41,7 @@ Then run `publish\TNR-Booklet.exe`.
 - Folders and tags (Work / Personal to start, plus your own)
 - Todos and notes (notes skip due dates and reminders)
 - List badges: **TODO** (amber), **NOTE** (teal), **REMINDER** (rose)
-- Views: All, Today, Upcoming, Overdue, Completed
+- Views: All (notes on top, todos below a purple divider), Today, Upcoming, Overdue, Completed
 - One-shot and repeating reminders
 - Toast, sound, tray, close-to-tray
 - Theme editor
@@ -55,6 +55,8 @@ Then run `publish\TNR-Booklet.exe`.
 Time is **24-hour** (`09:05` or `21:30`, not 9:05 PM). Date and time sit side by side on the todo editor.
 
 While TNR-Booklet is open it watches the clock. If you close it, Windows Task Scheduler still starts it at that time. Look under **Task Scheduler Library → TNR-Booklet**. Turn this off in **Settings** if you only want alerts while the app is running.
+
+When a reminder popup appears, **Dismiss** clears or advances it as before. **Remind me** (with a minutes box, default 5) postpones that same reminder. Recurring items keep their original schedule; only this fire is delayed. Minutes must be a whole number from 1 to 10080 (7 days). The delay is also written to Task Scheduler when that option is on.
 
 ---
 

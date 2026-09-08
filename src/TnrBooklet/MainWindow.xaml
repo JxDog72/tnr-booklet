@@ -11,6 +11,163 @@
         Background="{DynamicResource BgAppBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
         Closing="Window_Closing">
+    <Window.Resources>
+        <Style x:Key="TaskItemContainerStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="bd"
+                                Background="{DynamicResource BgSurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="0">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="TaskRowTemplate" DataType="{x:Type vm:TaskListItemVm}">
+            <Grid MinHeight="52">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Background="{Binding FolderBrush}" CornerRadius="6,0,0,6"/>
+                <TextBlock Grid.Column="1"
+                           Text="⋮⋮"
+                           Tag="DragGrip"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Margin="6,0,2,0"
+                           Cursor="SizeAll"
+                           ToolTip="Drag to reorder"/>
+                <CheckBox Grid.Column="2"
+                          IsChecked="{Binding IsDone, Mode=OneWay}"
+                          VerticalAlignment="Center"
+                          Margin="6,0,8,0"
+                          Style="{DynamicResource FocusCheckBox}"
+                          Click="CompleteCheck_Click"/>
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,8,8,8">
+                    <DockPanel>
+                        <ItemsControl DockPanel.Dock="Right"
+                                      ItemsSource="{Binding Ticks}"
+                                      Margin="8,0,0,0"
+                                      VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ProgressTickVm}">
+                                    <Button Width="10" Height="16" Padding="0" Margin="1,0"
+                                            Cursor="Hand"
+                                            ToolTip="{Binding Number, StringFormat=Progress {0}/10}"
+                                            Command="{Binding DataContext.SetProgressCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Width="7" Height="10" CornerRadius="2"
+                                                        Background="{Binding FillBrush}"
+                                                        BorderBrush="#3F3F46"
+                                                        BorderThickness="1"/>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource OverdueBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </DockPanel>
+                    <TextBlock Text="{Binding Subtitle}"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               FontSize="12"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Border Background="{Binding KindBackground}"
+                            CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding KindLabel}"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{Binding KindBrush}"/>
+                    </Border>
+                    <TextBlock Text="{Binding PriorityLabel}"
+                               Foreground="{Binding PriorityBrush}"
+                               FontWeight="{Binding PriorityWeight}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"
+                               FontSize="11"/>
+                    <Button Content="Edit"
+                            Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Style="{DynamicResource FocusButton}"
+                            Padding="8,4" Margin="0,0,6,0"/>
+                    <Button Content="✕"
+                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Style="{DynamicResource FocusButton}"
+                            Padding="8,4"
+                            ToolTip="Delete"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <Style x:Key="TaskListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="AllowDrop" Value="True"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource TaskItemContainerStyle}"/>
+            <Setter Property="ItemTemplate" Value="{StaticResource TaskRowTemplate}"/>
+        </Style>
+        <Style x:Key="TaskListBoxFitStyle" TargetType="ListBox" BasedOn="{StaticResource TaskListBoxStyle}">
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ItemsPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel>
         <!-- Toolbar -->
         <Border DockPanel.Dock="Top"
@@ -197,168 +354,80 @@
 
             <!-- Task list -->
             <Grid Grid.Column="1" Margin="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Visibility="{Binding IsSplitAllView, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Notes"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   Margin="2,0,0,8"/>
+                        <ListBox x:Name="NoteList"
+                                 Style="{StaticResource TaskListBoxFitStyle}"
+                                 ItemsSource="{Binding NoteTasks}"
+                                 SelectedItem="{Binding SelectedTask}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 MouseDoubleClick="TaskList_MouseDoubleClick"
+                                 PreviewMouseLeftButtonDown="TaskList_PreviewMouseLeftButtonDown"
+                                 PreviewMouseMove="TaskList_PreviewMouseMove"
+                                 Drop="TaskList_Drop"
+                                 DragOver="TaskList_DragOver"
+                                 KeyDown="TaskList_KeyDown"/>
+                        <TextBlock Text="{Binding EmptyNotesMessage}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontSize="13"
+                                   Margin="8,0,0,4"
+                                   Visibility="{Binding HasNotes, Converter={StaticResource InvertBoolToVis}}"/>
+
+                        <Border Height="4"
+                                Margin="0,14,0,14"
+                                Background="#7C3AED"
+                                CornerRadius="2"
+                                SnapsToDevicePixels="True"/>
+
+                        <TextBlock Text="Todos"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   Margin="2,0,0,8"/>
+                        <ListBox x:Name="TodoList"
+                                 Style="{StaticResource TaskListBoxFitStyle}"
+                                 ItemsSource="{Binding TodoTasks}"
+                                 SelectedItem="{Binding SelectedTask}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 MouseDoubleClick="TaskList_MouseDoubleClick"
+                                 PreviewMouseLeftButtonDown="TaskList_PreviewMouseLeftButtonDown"
+                                 PreviewMouseMove="TaskList_PreviewMouseMove"
+                                 Drop="TaskList_Drop"
+                                 DragOver="TaskList_DragOver"
+                                 KeyDown="TaskList_KeyDown"/>
+                        <TextBlock Text="{Binding EmptyTodosMessage}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontSize="13"
+                                   Margin="8,0,0,4"
+                                   Visibility="{Binding HasTodos, Converter={StaticResource InvertBoolToVis}}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
                 <ListBox x:Name="TaskList"
+                         Style="{StaticResource TaskListBoxStyle}"
                          ItemsSource="{Binding Tasks}"
                          SelectedItem="{Binding SelectedTask}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         AllowDrop="True"
+                         Visibility="{Binding IsSplitAllView, Converter={StaticResource InvertBoolToVis}}"
                          MouseDoubleClick="TaskList_MouseDoubleClick"
                          PreviewMouseLeftButtonDown="TaskList_PreviewMouseLeftButtonDown"
                          PreviewMouseMove="TaskList_PreviewMouseMove"
                          Drop="TaskList_Drop"
                          DragOver="TaskList_DragOver"
-                         KeyDown="TaskList_KeyDown">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin" Value="0,0,0,6"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="bd"
-                                                Background="{DynamicResource BgSurfaceBrush}"
-                                                BorderBrush="{DynamicResource BorderDefaultBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="6"
-                                                Padding="0">
-                                            <ContentPresenter/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SelectionBgBrush}"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:TaskListItemVm}">
-                            <Grid MinHeight="52">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="4"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="{Binding FolderBrush}" CornerRadius="6,0,0,6"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="⋮⋮"
-                                           Tag="DragGrip"
-                                           Foreground="{DynamicResource TextMutedBrush}"
-                                           FontSize="11"
-                                           VerticalAlignment="Center"
-                                           Margin="6,0,2,0"
-                                           Cursor="SizeAll"
-                                           ToolTip="Drag to reorder"/>
-                                <CheckBox Grid.Column="2"
-                                          IsChecked="{Binding IsDone, Mode=OneWay}"
-                                          VerticalAlignment="Center"
-                                          Margin="6,0,8,0"
-                                          Style="{DynamicResource FocusCheckBox}"
-                                          Click="CompleteCheck_Click"/>
-                                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,8,8,8">
-                                    <DockPanel>
-                                        <ItemsControl DockPanel.Dock="Right"
-                                                      ItemsSource="{Binding Ticks}"
-                                                      Margin="8,0,0,0"
-                                                      VerticalAlignment="Center">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type vm:ProgressTickVm}">
-                                                    <Button Width="10" Height="16" Padding="0" Margin="1,0"
-                                                            Cursor="Hand"
-                                                            ToolTip="{Binding Number, StringFormat=Progress {0}/10}"
-                                                            Command="{Binding DataContext.SetProgressCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}">
-                                                        <Button.Template>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border Width="7" Height="10" CornerRadius="2"
-                                                                        Background="{Binding FillBrush}"
-                                                                        BorderBrush="#3F3F46"
-                                                                        BorderThickness="1"/>
-                                                            </ControlTemplate>
-                                                        </Button.Template>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   TextTrimming="CharacterEllipsis">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsDone}" Value="True">
-                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                            <Setter Property="Foreground" Value="{DynamicResource OverdueBrush}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </DockPanel>
-                                    <TextBlock Text="{Binding Subtitle}"
-                                               Foreground="{DynamicResource TextMutedBrush}"
-                                               FontSize="12"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                    <Border Background="{Binding KindBackground}"
-                                            CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
-                                            VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding KindLabel}"
-                                                   FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{Binding KindBrush}"/>
-                                    </Border>
-                                    <TextBlock Text="{Binding PriorityLabel}"
-                                               Foreground="{Binding PriorityBrush}"
-                                               FontWeight="{Binding PriorityWeight}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"
-                                               FontSize="11"/>
-                                    <Button Content="Edit"
-                                            Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Style="{DynamicResource FocusButton}"
-                                            Padding="8,4" Margin="0,0,6,0"/>
-                                    <Button Content="✕"
-                                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Style="{DynamicResource FocusButton}"
-                                            Padding="8,4"
-                                            ToolTip="Delete"/>
-                                </StackPanel>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                         KeyDown="TaskList_KeyDown"/>
 
                 <TextBlock Text="{Binding EmptyMessage}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource TextMutedBrush}"
                            FontSize="15"
-                           Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}"/>
+                           Visibility="{Binding ShowGlobalEmpty, Converter={StaticResource BoolToVis}}"/>
             </Grid>
         </Grid>
     </DockPanel>

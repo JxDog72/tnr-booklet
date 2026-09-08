@@ -29,5 +29,7 @@ if not exist "%EXE%" (
     exit /b 1
 )
 
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install-StartSearchShortcut.ps1" >nul 2>&1
+
 start "" "%EXE%"
 exit /b 0

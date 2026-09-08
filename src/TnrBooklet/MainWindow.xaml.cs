@@ -129,7 +129,8 @@ public partial class MainWindow : Window
             && Math.Abs(pos.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
             return;
 
-        System.Windows.DragDrop.DoDragDrop(TaskList, _dragItem, System.Windows.DragDropEffects.Move);
+        var source = sender as System.Windows.Controls.ListBox ?? TaskList;
+        System.Windows.DragDrop.DoDragDrop(source, _dragItem, System.Windows.DragDropEffects.Move);
         _dragItem = null;
     }
 

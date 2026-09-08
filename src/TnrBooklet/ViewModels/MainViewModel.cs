@@ -57,6 +57,8 @@ public sealed class MainViewModel : ViewModelBase
     public ObservableCollection<SidebarItemVm> FolderItems { get; } = new();
     public ObservableCollection<SidebarItemVm> TagItems { get; } = new();
     public ObservableCollection<TaskListItemVm> Tasks { get; } = new();
+    public ObservableCollection<TaskListItemVm> NoteTasks { get; } = new();
+    public ObservableCollection<TaskListItemVm> TodoTasks { get; } = new();
 
     public RelayCommand ToggleSidebarCommand { get; }
     public RelayCommand SelectSidebarItemCommand { get; }
@@ -133,7 +135,14 @@ public sealed class MainViewModel : ViewModelBase
 
     public bool HasTasks => Tasks.Count > 0;
     public bool IsEmpty => Tasks.Count == 0;
+    public bool HasNotes => NoteTasks.Count > 0;
+    public bool HasTodos => TodoTasks.Count > 0;
+    public bool IsSplitAllView =>
+        _selectedView == SmartView.All && _selectedFolderId is null && _selectedTagId is null;
+    public bool ShowGlobalEmpty => IsEmpty && !IsSplitAllView;
     public string EmptyMessage => "No tasks in this view";
+    public string EmptyNotesMessage => "No notes yet";
+    public string EmptyTodosMessage => "No todos yet";
 
     public string CurrentFilterLabel
     {
@@ -236,14 +245,25 @@ public sealed class MainViewModel : ViewModelBase
         }
 
         Tasks.Clear();
+        NoteTasks.Clear();
+        TodoTasks.Clear();
         foreach (var task in tasks)
         {
             folderMap.TryGetValue(task.FolderId, out var folder);
-            Tasks.Add(new TaskListItemVm(task, folder, tags));
+            var vm = new TaskListItemVm(task, folder, tags);
+            Tasks.Add(vm);
+            if (vm.IsNote)
+                NoteTasks.Add(vm);
+            else
+                TodoTasks.Add(vm);
         }
 
         RaisePropertyChanged(nameof(HasTasks));
         RaisePropertyChanged(nameof(IsEmpty));
+        RaisePropertyChanged(nameof(HasNotes));
+        RaisePropertyChanged(nameof(HasTodos));
+        RaisePropertyChanged(nameof(IsSplitAllView));
+        RaisePropertyChanged(nameof(ShowGlobalEmpty));
         RaisePropertyChanged(nameof(CurrentFilterLabel));
     }
 
@@ -430,7 +450,9 @@ public sealed class MainViewModel : ViewModelBase
     public void MoveSelected(int delta)
     {
         if (SelectedTask is null) return;
-        var list = Tasks.ToList();
+        var list = IsSplitAllView
+            ? (SelectedTask.IsNote ? NoteTasks : TodoTasks).ToList()
+            : Tasks.ToList();
         var index = list.FindIndex(t => t.Id == SelectedTask.Id);
         var next = index + delta;
         if (index < 0 || next < 0 || next >= list.Count)
