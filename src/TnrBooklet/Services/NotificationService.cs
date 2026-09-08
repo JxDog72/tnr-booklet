@@ -1,6 +1,7 @@
 using System.Media;
 using System.Runtime.InteropServices;
 using Focus.Core.Models;
+using Focus.Views;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Wpf = System.Windows;
 
@@ -22,13 +23,13 @@ public sealed class NotificationService
         }
     }
 
-    public void Notify(TaskItem task, AppSettings settings, Action? focusMainWindow)
+    public ReminderNotifyResult Notify(TaskItem task, AppSettings settings, Action? focusMainWindow)
     {
         ArgumentNullException.ThrowIfNull(task);
         ArgumentNullException.ThrowIfNull(settings);
 
         if (settings.NotificationsPaused)
-            return;
+            return ReminderNotifyResult.Dismissed;
 
         if (settings.ToastEnabled)
             ShowToast(task.Title, task.Notes);
@@ -40,12 +41,13 @@ public sealed class NotificationService
         {
             try { focusMainWindow?.Invoke(); }
             catch { /* ignore */ }
-            ShowAlert(task);
+            return ShowAlert(task);
         }
-        else if (!settings.ToastEnabled)
-        {
-            ShowAlert(task);
-        }
+
+        if (!settings.ToastEnabled)
+            return ShowAlert(task);
+
+        return ReminderNotifyResult.Dismissed;
     }
 
     public void ShowToast(string title, string body)
@@ -66,7 +68,7 @@ public sealed class NotificationService
         }
     }
 
-    public static void ShowAlert(TaskItem task)
+    public static ReminderNotifyResult ShowAlert(TaskItem task)
     {
         var title = string.IsNullOrWhiteSpace(task.Title) ? "TNR-Booklet reminder" : task.Title;
         var body = string.IsNullOrWhiteSpace(task.Notes) ? "Reminder" : task.Notes;
@@ -74,19 +76,39 @@ public sealed class NotificationService
         {
             var app = Wpf.Application.Current;
             if (app is not null)
-            {
-                app.Dispatcher.Invoke(() =>
-                    Wpf.MessageBox.Show(body, title, Wpf.MessageBoxButton.OK, Wpf.MessageBoxImage.Information));
-            }
-            else
-            {
-                Wpf.MessageBox.Show(body, title, Wpf.MessageBoxButton.OK, Wpf.MessageBoxImage.Information);
-            }
+                return app.Dispatcher.Invoke(() => ShowAlertWindow(title, body));
+
+            return ShowAlertWindow(title, body);
         }
         catch
         {
-            // Headless / no UI thread.
+            try
+            {
+                Wpf.MessageBox.Show(body, title, Wpf.MessageBoxButton.OK, Wpf.MessageBoxImage.Information);
+            }
+            catch
+            {
+                // Headless / no UI thread.
+            }
+
+            return ReminderNotifyResult.Dismissed;
         }
+    }
+
+    private static ReminderNotifyResult ShowAlertWindow(string title, string body)
+    {
+        var win = new ReminderAlertWindow(title, body);
+        var app = Wpf.Application.Current;
+        if (app?.MainWindow is { IsVisible: true } owner && !ReferenceEquals(owner, win))
+        {
+            win.Owner = owner;
+            win.WindowStartupLocation = Wpf.WindowStartupLocation.CenterOwner;
+        }
+
+        win.ShowDialog();
+        return win.SnoozeMinutes is int minutes
+            ? ReminderNotifyResult.Snooze(minutes)
+            : ReminderNotifyResult.Dismissed;
     }
 
     public void PlaySound(string? soundPath)

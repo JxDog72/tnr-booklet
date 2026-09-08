@@ -61,6 +61,8 @@ public partial class App : System.Windows.Application
         if (remindId is not null)
         {
             // Fire-and-forget path for Task Scheduler (no main window).
+            // Keep the process alive until the reminder dialog is done; then Shutdown().
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             _ = HandleRemindThenExitAsync(remindId);
             return;
         }
@@ -210,9 +212,13 @@ public partial class App : System.Windows.Application
 
         var settings = _services.Settings.Current;
         var notify = new NotificationService();
-        notify.Notify(task, settings, NotificationService.FocusMainWindow);
+        var result = notify.Notify(task, settings, NotificationService.FocusMainWindow);
 
-        ReminderAdvance.OnFired(task, DateTime.Now);
+        if (result.IsSnooze && result.SnoozeMinutes is int minutes)
+            ReminderAdvance.Snooze(task, minutes, DateTime.Now);
+        else
+            ReminderAdvance.OnFired(task, DateTime.Now);
+
         _services.Store.UpsertTask(task);
 
         var exe = _services.GetExePath() ?? "";

@@ -1,0 +1,69 @@
+<Window x:Class="Focus.Views.ReminderAlertWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TNR-Booklet reminder"
+        Width="460"
+        SizeToContent="Height"
+        MinWidth="400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgAppBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="True">
+    <DockPanel Margin="18">
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <TextBlock x:Name="SnoozeError"
+                       Foreground="{DynamicResource DangerBrush}"
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"
+                       Margin="0,0,0,10"/>
+
+            <DockPanel LastChildFill="False" Margin="0,0,0,12">
+                <TextBlock Text="Remind me in"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,0,8,0"/>
+                <TextBox x:Name="MinutesBox"
+                         Width="64"
+                         Text="5"
+                         Style="{DynamicResource FocusTextBox}"
+                         VerticalContentAlignment="Center"
+                         MaxLength="5"
+                         ToolTip="Whole minutes, 1 to 10080 (7 days)"
+                         PreviewTextInput="MinutesBox_PreviewTextInput"
+                         KeyDown="MinutesBox_KeyDown"/>
+                <TextBlock Text="minutes"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="8,0,12,0"/>
+                <Button Content="Remind me"
+                        Style="{DynamicResource AccentButton}"
+                        Padding="14,6"
+                        IsDefault="True"
+                        Click="Snooze_Click"/>
+            </DockPanel>
+
+            <Button Content="Dismiss"
+                    Style="{DynamicResource FocusButton}"
+                    HorizontalAlignment="Right"
+                    Width="96"
+                    IsCancel="True"
+                    Click="Dismiss_Click"/>
+        </StackPanel>
+
+        <StackPanel>
+            <TextBlock x:Name="TitleText"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,10"/>
+            <TextBlock x:Name="BodyText"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       MaxHeight="180"
+                       TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+    </DockPanel>
+</Window>
