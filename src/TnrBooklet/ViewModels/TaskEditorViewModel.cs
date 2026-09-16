@@ -230,6 +230,9 @@ public sealed class TaskEditorViewModel : ViewModelBase
             if (!TryParseTime(TimeOfDayText, out var timeOfDay))
                 timeOfDay = new TimeOnly(9, 0);
 
+            if (RecurrenceKind == RecurrenceKind.Hourly && reminder is { } remClock)
+                timeOfDay = TimeOnly.FromDateTime(remClock);
+
             var mask = 0;
             if (Mon) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Monday);
             if (Tue) mask |= RecurrenceRule.WeekdayBit(DayOfWeek.Tuesday);
@@ -249,7 +252,11 @@ public sealed class TaskEditorViewModel : ViewModelBase
 
             if (rule.IsRecurring)
             {
-                rule.NextFireAtLocal = RecurrenceCalculator.GetNextFireLocal(rule, DateTime.Now);
+                var now = DateTime.Now;
+                if (reminder is { } first && first > now)
+                    rule.NextFireAtLocal = first;
+                else
+                    rule.NextFireAtLocal = RecurrenceCalculator.GetNextFireLocal(rule, now);
                 reminder ??= rule.NextFireAtLocal;
             }
         }

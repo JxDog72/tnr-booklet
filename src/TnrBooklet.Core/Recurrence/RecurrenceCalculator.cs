@@ -19,6 +19,7 @@ public static class RecurrenceCalculator
             RecurrenceKind.Weekly => NextWeekly(fromLocal, time, rule.WeekdaysMask),
             RecurrenceKind.Monthly => NextMonthly(fromLocal, time),
             RecurrenceKind.EveryNDays => NextEveryNDays(fromLocal, time, interval),
+            RecurrenceKind.Hourly => NextEveryNHours(fromLocal, time, interval),
             _ => null
         };
     }
@@ -82,5 +83,19 @@ public static class RecurrenceCalculator
         var candidate = AtTime(from, time);
         if (candidate > from) return candidate;
         return AtTime(from.Date.AddDays(n), time);
+    }
+
+    /// <summary>
+    /// Next fire strictly after <paramref name="from"/>, aligned to
+    /// <paramref name="time"/>'s minutes/seconds, every n hours.
+    /// </summary>
+    private static DateTime NextEveryNHours(DateTime from, TimeOnly time, int n)
+    {
+        n = Math.Max(1, n);
+        var aligned = new DateTime(
+            from.Year, from.Month, from.Day, from.Hour, time.Minute, time.Second, from.Kind);
+        if (aligned <= from)
+            aligned = aligned.AddHours(n);
+        return aligned;
     }
 }

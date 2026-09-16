@@ -114,7 +114,8 @@
                         <TextBox Grid.Column="2" Text="{Binding TimeOfDayText, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{DynamicResource FocusTextBox}" ToolTip="Recurrence time of day, 24-hour (HH:mm)"/>
                         <TextBox Grid.Column="4" Text="{Binding IntervalN, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{DynamicResource FocusTextBox}" ToolTip="Interval N (EveryNDays)"/>
+                                 Style="{DynamicResource FocusTextBox}"
+                                 ToolTip="Interval N. EveryNDays = days. Hourly = hours (1 = every hour)."/>
                     </Grid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12"

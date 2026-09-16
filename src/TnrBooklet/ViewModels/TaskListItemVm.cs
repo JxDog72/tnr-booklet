@@ -117,7 +117,7 @@ public sealed class TaskListItemVm : ViewModelBase
                 parts.Add($"Next {next:g}");
 
             if (task.Recurrence.IsRecurring)
-                parts.Add(task.Recurrence.Kind.ToString());
+                parts.Add(RecurrenceLabel(task.Recurrence));
         }
 
         if (task.TagIds.Count > 0)
@@ -132,6 +132,14 @@ public sealed class TaskListItemVm : ViewModelBase
 
         return string.Join(" · ", parts);
     }
+
+    private static string RecurrenceLabel(RecurrenceRule rule) => rule.Kind switch
+    {
+        RecurrenceKind.Hourly when rule.IntervalN <= 1 => "Hourly",
+        RecurrenceKind.Hourly => $"Every {rule.IntervalN} hours",
+        RecurrenceKind.EveryNDays when rule.IntervalN > 1 => $"Every {rule.IntervalN} days",
+        _ => rule.Kind.ToString()
+    };
 
     private static Media.SolidColorBrush Frozen(byte r, byte g, byte b)
     {
