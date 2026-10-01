@@ -56,7 +56,7 @@ Time is **24-hour** (`09:05` or `21:30`, not 9:05 PM). Date and time sit side by
 
 While TNR-Booklet is open it watches the clock. If you close it, Windows Task Scheduler still starts it at that time. Look under **Task Scheduler Library → TNR-Booklet**. Turn this off in **Settings** if you only want alerts while the app is running.
 
-When a reminder popup appears, **Dismiss** clears or advances it as before. **Remind me** (with a minutes box, default 5) postpones that same reminder. Recurring items keep their original schedule; only this fire is delayed. Minutes must be a whole number from 1 to 10080 (7 days). The delay is also written to Task Scheduler when that option is on.
+When a reminder popup appears, **Dismiss** clears or advances it as before. **Remind me** postpones that same reminder: click hour and minute chips (or the + / − buttons). Default is 5 minutes. Recurring items keep their original schedule; only this fire is delayed. Delay is 1 minute through 7 days. The delay is also written to Task Scheduler when that option is on.
 
 **Hourly:** set Recurrence to `Hourly` and Interval N to hours between alerts (`1` = every hour). The first fire is the reminder date/time you pick. Change Interval N or Recurrence later to slow it down or stop the loop (or delete the item).
 

@@ -7,6 +7,7 @@ public static class ReminderAdvance
 {
     public const int MinSnoozeMinutes = 1;
     public const int MaxSnoozeMinutes = 10_080; // 7 days
+    public const int MaxSnoozeHours = MaxSnoozeMinutes / 60; // 168
 
     /// <summary>After a reminder fires: reschedule recurring; clear one-shot reminder.</summary>
     public static void OnFired(TaskItem task, DateTime firedAtLocal)
@@ -65,6 +66,31 @@ public static class ReminderAdvance
 
         minutes = n;
         return true;
+    }
+
+    /// <summary>Hours plus minutes, 1 minute through 7 days.</summary>
+    public static bool TryGetSnoozeMinutes(int hours, int minutes, out int totalMinutes)
+    {
+        totalMinutes = 0;
+        if (hours < 0 || minutes < 0)
+            return false;
+
+        var total = (long)hours * 60L + minutes;
+        if (total < MinSnoozeMinutes || total > MaxSnoozeMinutes)
+            return false;
+
+        totalMinutes = (int)total;
+        return true;
+    }
+
+    public static string FormatSnoozeDuration(int hours, int minutes)
+    {
+        var parts = new List<string>();
+        if (hours > 0)
+            parts.Add(hours == 1 ? "1 hour" : $"{hours} hours");
+        if (minutes > 0)
+            parts.Add(minutes == 1 ? "1 minute" : $"{minutes} minutes");
+        return parts.Count == 0 ? "0 minutes" : string.Join(" ", parts);
     }
 
     /// <summary>User completed: one-shot → Done; recurring → advance, stay Open.</summary>
